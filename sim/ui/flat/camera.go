@@ -1,11 +1,11 @@
 package flat
 
 import (
-	"go-experiments/common/commonmath"
-	"go-experiments/common/commonopengl"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/common/commonopengl"
 
-	"go-experiments/sim/config"
-	"go-experiments/sim/input"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/input"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

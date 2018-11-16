@@ -2,9 +2,9 @@ package commonShadow
 
 import (
 	"fmt"
-	"go-experiments/common/commonconfig"
-	"go-experiments/common/commonmath"
-	"go-experiments/common/commonopengl"
+	"go-simulate-a-city/common/commonconfig"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/common/commonopengl"
 
 	"github.com/go-gl/mathgl/mgl32"
 

@@ -1,18 +1,18 @@
 package main
 
 import (
-	"go-experiments/common/commoncolor"
-	"go-experiments/common/commonconfig"
-	"go-experiments/common/commonopengl"
+	"go-simulate-a-city/common/commoncolor"
+	"go-simulate-a-city/common/commonconfig"
+	"go-simulate-a-city/common/commonopengl"
 
 	"github.com/go-gl/mathgl/mgl32"
 
-	"go-experiments/sim/config"
-	"go-experiments/sim/engine"
-	"go-experiments/sim/input"
-	"go-experiments/sim/input/editorEngine"
-	"go-experiments/sim/ui"
-	"go-experiments/sim/ui/flat"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/engine"
+	"go-simulate-a-city/sim/input"
+	"go-simulate-a-city/sim/input/editorEngine"
+	"go-simulate-a-city/sim/ui"
+	"go-simulate-a-city/sim/ui/flat"
 
 	"runtime"
 	"time"
@@ -186,7 +186,6 @@ func RenderLoop(update, render func(), window *glfw.Window) {
 
 		// Render the full display.
 		commonOpenGl.ResetViewport()
-
 		render()
 		window.SwapBuffers()
 	}

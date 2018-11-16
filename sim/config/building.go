@@ -1,6 +1,6 @@
 package config
 
-import "go-experiments/sim/engine/resource"
+import "go-simulate-a-city/sim/engine/resource"
 
 type Building struct {
 	Name string

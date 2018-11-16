@@ -1,8 +1,8 @@
 package region
 
 import (
-	"go-experiments/common/commonmath"
-	"go-experiments/common/commonopengl"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/common/commonopengl"
 
 	"github.com/go-gl/mathgl/mgl32"
 

@@ -1,9 +1,9 @@
 package flat
 
 import (
-	"go-experiments/common/commonmath"
-	"go-experiments/sim/engine"
-	"go-experiments/sim/ui/region"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/engine"
+	"go-simulate-a-city/sim/ui/region"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

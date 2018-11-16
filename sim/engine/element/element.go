@@ -1,7 +1,7 @@
 package element
 
 import (
-	"go-experiments/common/commonmath"
+	"go-simulate-a-city/common/commonmath"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

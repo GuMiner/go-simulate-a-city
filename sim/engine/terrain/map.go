@@ -2,9 +2,9 @@ package terrain
 
 import (
 	"fmt"
-	"go-experiments/common/commonmath"
-	"go-experiments/sim/config"
-	"go-experiments/sim/engine/subtile"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/engine/subtile"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

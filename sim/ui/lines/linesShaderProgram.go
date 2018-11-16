@@ -1,7 +1,7 @@
 package lines
 
 import (
-	"go-experiments/common/commonopengl"
+	"go-simulate-a-city/common/commonopengl"
 
 	"github.com/go-gl/mathgl/mgl32"
 

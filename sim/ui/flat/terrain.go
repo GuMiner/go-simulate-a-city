@@ -1,9 +1,9 @@
 package flat
 
 import (
-	"go-experiments/sim/config"
-	"go-experiments/sim/engine/terrain"
-	"go-experiments/sim/ui/overlay"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/engine/terrain"
+	"go-simulate-a-city/sim/ui/overlay"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/mathgl/mgl32"

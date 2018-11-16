@@ -1,7 +1,7 @@
 package vehicle
 
 import (
-	"go-experiments/sim/engine/resource"
+	"go-simulate-a-city/sim/engine/resource"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

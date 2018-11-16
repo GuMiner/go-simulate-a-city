@@ -3,7 +3,7 @@ package commonOpenGl
 // Simplifies OpenGL initialization
 import (
 	"fmt"
-	"go-experiments/common/commonconfig"
+	"go-simulate-a-city/common/commonconfig"
 	"log"
 
 	"github.com/go-gl/gl/v4.5-core/gl"

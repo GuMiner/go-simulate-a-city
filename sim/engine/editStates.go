@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"go-experiments/sim/input/editorEngine"
+	"go-simulate-a-city/sim/input/editorEngine"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

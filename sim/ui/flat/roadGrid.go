@@ -1,8 +1,8 @@
 package flat
 
 import (
-	"go-experiments/sim/engine/road"
-	"go-experiments/sim/ui/lines"
+	"go-simulate-a-city/sim/engine/road"
+	"go-simulate-a-city/sim/ui/lines"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

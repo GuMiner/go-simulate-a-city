@@ -2,7 +2,7 @@ package core
 
 import (
 	"fmt"
-	"go-experiments/sim/config"
+	"go-simulate-a-city/sim/config"
 )
 
 type Financials struct {

@@ -1,8 +1,8 @@
 package power
 
 import (
-	"go-experiments/sim/config"
-	"go-experiments/sim/input/editorEngine"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/input/editorEngine"
 )
 
 type PowerPlantSize int

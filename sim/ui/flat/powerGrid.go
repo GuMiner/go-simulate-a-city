@@ -1,9 +1,9 @@
 package flat
 
 import (
-	"go-experiments/sim/engine/power"
-	"go-experiments/sim/ui/lines"
-	"go-experiments/sim/ui/region"
+	"go-simulate-a-city/sim/engine/power"
+	"go-simulate-a-city/sim/ui/lines"
+	"go-simulate-a-city/sim/ui/region"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

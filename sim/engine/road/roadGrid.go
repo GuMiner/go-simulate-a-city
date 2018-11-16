@@ -2,8 +2,8 @@ package road
 
 import (
 	"fmt"
-	"go-experiments/sim/engine/core"
-	"go-experiments/sim/engine/element"
+	"go-simulate-a-city/sim/engine/core"
+	"go-simulate-a-city/sim/engine/element"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

@@ -2,7 +2,7 @@ package editorEngine
 
 import (
 	"fmt"
-	"go-experiments/sim/input"
+	"go-simulate-a-city/sim/input"
 )
 
 // TODO: Modes should really be saved in game state on a per-game basis.

@@ -1,6 +1,6 @@
 package terrain
 
-import "go-experiments/sim/config"
+import "go-simulate-a-city/sim/config"
 
 type TerrainType int
 

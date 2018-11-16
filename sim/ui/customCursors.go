@@ -1,8 +1,8 @@
 package ui
 
 import (
-	"go-experiments/common/commonio"
-	"go-experiments/sim/input/editorEngine"
+	"go-simulate-a-city/common/commonio"
+	"go-simulate-a-city/sim/input/editorEngine"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )

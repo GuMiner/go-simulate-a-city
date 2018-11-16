@@ -2,9 +2,9 @@ package road
 
 import (
 	"fmt"
-	"go-experiments/common/commonmath"
-	"go-experiments/sim/config"
-	"go-experiments/sim/engine/element"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/engine/element"
 
 	"github.com/ojrac/opensimplex-go"
 

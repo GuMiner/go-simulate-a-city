@@ -1,9 +1,9 @@
 package engine
 
 import (
-	"go-experiments/common/commonmath"
-	"go-experiments/sim/engine/power"
-	"go-experiments/sim/input/editorEngine"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/engine/power"
+	"go-simulate-a-city/sim/input/editorEngine"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

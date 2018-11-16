@@ -2,8 +2,8 @@ package terrain
 
 import (
 	"fmt"
-	"go-experiments/common/commonmath"
-	"go-experiments/sim/config"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/config"
 	"math"
 
 	"github.com/ojrac/opensimplex-go"

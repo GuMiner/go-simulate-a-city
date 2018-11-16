@@ -1,8 +1,8 @@
 package overlay
 
 import (
-	"go-experiments/common/commonopengl"
-	"go-experiments/sim/config"
+	"go-simulate-a-city/common/commonopengl"
+	"go-simulate-a-city/sim/config"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/mathgl/mgl32"

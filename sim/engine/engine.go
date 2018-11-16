@@ -2,14 +2,14 @@ package engine
 
 import (
 	"fmt"
-	"go-experiments/common/commonmath"
-	"go-experiments/sim/config"
-	"go-experiments/sim/engine/core"
-	"go-experiments/sim/engine/element"
-	"go-experiments/sim/engine/power"
-	"go-experiments/sim/engine/road"
-	"go-experiments/sim/engine/terrain"
-	"go-experiments/sim/input/editorEngine"
+	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/engine/core"
+	"go-simulate-a-city/sim/engine/element"
+	"go-simulate-a-city/sim/engine/power"
+	"go-simulate-a-city/sim/engine/road"
+	"go-simulate-a-city/sim/engine/terrain"
+	"go-simulate-a-city/sim/input/editorEngine"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

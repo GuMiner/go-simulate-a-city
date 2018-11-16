@@ -1,10 +1,10 @@
 package ui
 
 import (
-	"go-experiments/sim/input/editorEngine"
-	"go-experiments/sim/ui/lines"
-	"go-experiments/sim/ui/overlay"
-	"go-experiments/sim/ui/region"
+	"go-simulate-a-city/sim/input/editorEngine"
+	"go-simulate-a-city/sim/ui/lines"
+	"go-simulate-a-city/sim/ui/overlay"
+	"go-simulate-a-city/sim/ui/region"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
