@@ -52,6 +52,7 @@ func main() {
 
 	window.MakeContextCurrent()
 
+	input.SetupInputBufferAgent()
 	setInputCallbacks(window)
 	commonOpenGl.ConfigureOpenGl()
 
@@ -86,8 +87,6 @@ func main() {
 
 		// Must be first.
 		glfw.PollEvents()
-		mouseMoved := input.MouseMoveEvent
-		input.MouseMoveEvent = false
 
 		camera.Update(frameTime)
 
@@ -112,7 +111,7 @@ func main() {
 		}
 
 		boardPos := camera.MapPixelPosToBoard(input.MousePos)
-		if editorStateUpdated || mouseMoved {
+		if editorStateUpdated || true { // mouseMoved {
 			engine.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
 			engine.ComputeSnapNodes(&editorEngine.EngineState)
 		}
@@ -127,7 +126,7 @@ func main() {
 			input.MouseReleaseEvent = false
 		}
 
-		if mouseMoved {
+		if true { // mouseMoved {
 			engine.MouseMoved(boardPos, editorEngine.EngineState)
 		}
 
