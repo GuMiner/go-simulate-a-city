@@ -30,8 +30,8 @@ type Engine struct {
 
 	Hypotheticals HypotheticalActions
 
-	time       core.Time
-	financials core.Financials
+	timer      core.Timer
+	financials core.FinancialAgent
 }
 
 func NewEngine() *Engine {
@@ -51,8 +51,8 @@ func NewEngine() *Engine {
 
 		Hypotheticals: NewHypotheticalActions(),
 
-		time:       core.NewTime(),
-		financials: core.NewFinancials()}
+		timer:      core.NewTimer(),
+		financials: core.NewFinancialAgent()}
 	return &engine
 }
 
@@ -67,7 +67,7 @@ func (e *Engine) addPowerPlantIfValid() {
 
 			element := e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
 			e.elementFinder.Add(element)
-			e.financials.BuyItem("Power Plant", power.GetPlantCost(plantType))
+			e.financials.TransactionChannel <- core.NewTransaction("Power Plant", power.GetPlantCost(plantType))
 		}
 	}
 }
@@ -87,7 +87,7 @@ func (e *Engine) updatePowerLineState() {
 		if line != nil {
 			e.elementFinder.Add(line)
 			powerLineCost := e.powerLineState.firstNode.Sub(powerLineEnd).Len() * config.Config.Power.PowerLineCost
-			e.financials.BuyItem("Power Line", powerLineCost)
+			e.financials.TransactionChannel <- core.NewTransaction("Power Line", powerLineCost)
 
 			e.powerLineState.firstNode = powerLineEnd
 			e.powerLineState.firstNodeElement = line.GetSnapNodeElement(1)
@@ -111,7 +111,7 @@ func (e *Engine) updateRoadLineState() {
 		if line != nil {
 			e.elementFinder.Add(line)
 			roadLineCost := e.roadLineState.firstNode.Sub(roadLineEnd).Len() * 3000 // TODO: Configurable
-			e.financials.BuyItem("Road", roadLineCost)
+			e.financials.TransactionChannel <- core.NewTransaction("Road", roadLineCost)
 
 			e.roadLineState.firstNode = roadLineEnd
 			e.roadLineState.firstNodeElement = line.GetSnapNodeElement(1)
@@ -234,13 +234,13 @@ func (e *Engine) StepEdit(stepAmount float32, engineState editorEngine.State) {
 
 // Steps the simulation
 func (e *Engine) StepSim(stepAmount float32) {
-	if e.time.Update(stepAmount) {
-		// End of day. Recompute financials and periodic data
-		if !e.financials.Update() {
-			fmt.Printf("No longer solvent! End of game.\n")
-			panic("TODO: Design a menu system. Low priority as gameplay is more important ATM.")
-		}
-	}
+	// if e.time.Update(stepAmount) {
+	// 	// End of day. Recompute financials and periodic data
+	// 	if !e.financials.Update() {
+	// 		fmt.Printf("No longer solvent! End of game.\n")
+	// 		panic("TODO: Design a menu system. Low priority as gameplay is more important ATM.")
+	// 	}
+	// }
 }
 
 // Update methods based on UI

@@ -11,25 +11,20 @@ type Time struct {
 	Days    int
 }
 
-func NewTime() Time {
+func newTime() Time {
 	return Time{
 		SimTime: 0,
 		DayTime: 0,
 		Days:    0}
 }
 
-// Updates the time. Returns true if we passed a day marker.
-func (t *Time) Update(step float32) bool {
-	t.SimTime += step
-	t.DayTime += step
-
+func (t *Time) update(secondsDelta float32) {
+	t.SimTime += 0.1
+	t.DayTime += 0.1
 	if t.DayTime > config.Config.Sim.SecondsPerDay {
 		t.DayTime -= config.Config.Sim.SecondsPerDay
 		t.Days++
 
 		fmt.Printf(">>> Advanced to day %v <<<\n", t.Days)
-		return true
 	}
-
-	return false
 }
