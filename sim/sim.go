@@ -76,6 +76,8 @@ func main() {
 	core.Init()
 	camera := flat.NewCamera(
 		input.InputBuffer.MouseMoveRegChannel,
+		input.InputBuffer.PressedKeysRegChannel,
+		input.InputBuffer.ReleasedKeysRegChannel,
 		core.CoreTimer.HighResRegChannel)
 
 	// Setup simulation

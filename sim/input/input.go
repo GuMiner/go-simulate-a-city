@@ -6,7 +6,6 @@ import (
 )
 
 var keyEvent bool = false
-var pressedKeys map[glfw.Key]bool = make(map[glfw.Key]bool)
 var typedKeys map[glfw.Key]bool = make(map[glfw.Key]bool)
 
 var ScrollEvent bool = false
@@ -46,9 +45,9 @@ func HandleMouseButton(window *glfw.Window, button glfw.MouseButton, action glfw
 func HandleKeyInput(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	switch action {
 	case glfw.Press:
-		pressedKeys[key] = true
+		InputBuffer.PressedKeysChannel <- key
 		typedKeys[key] = true
 	case glfw.Release:
-		pressedKeys[key] = false
+		InputBuffer.ReleasedKeysChannel <- key
 	}
 }

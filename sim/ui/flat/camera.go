@@ -3,41 +3,100 @@ package flat
 import (
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/common/commonopengl"
+	"time"
 
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/input"
 
+	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+var isLeftPressed = false
+var isRightPressed = false
+var isUpPressed = false
+var isDownPressed = false
+var lastTimeTick time.Time
+var ticked bool = false
+
 type Camera struct {
 	mouseMoves     chan mgl32.Vec2
-	highResTicks   chan int8
+	keyPresses     chan glfw.Key
+	keyReleases    chan glfw.Key
+	highResTicks   chan time.Time
 	ControlChannel chan int
 
 	zoomFactor float32
 	offset     mgl32.Vec2
 
 	mouseBoardPos mgl32.Vec2
+
+	lastUpdateTicks uint
+	keyMotionAmount float32
 }
 
 func NewCamera(
-	mouseMoveRegistrationChannel chan chan mgl32.Vec2,
-	highResRegistrationChannel chan chan int8) *Camera {
+	mouseMoveRegChannel chan chan mgl32.Vec2,
+	keyPressedRegChannel chan chan glfw.Key,
+	keyReleasedRegChannel chan chan glfw.Key,
+	highResRegChannel chan chan time.Time) *Camera {
 
 	camera := Camera{
-		zoomFactor:     1.0,
-		offset:         mgl32.Vec2{0, 0},
-		mouseMoves:     make(chan mgl32.Vec2),
-		highResTicks:   make(chan int8),
-		ControlChannel: make(chan int)}
+		zoomFactor:      1.0,
+		offset:          mgl32.Vec2{0, 0},
+		mouseMoves:      make(chan mgl32.Vec2),
+		keyPresses:      make(chan glfw.Key),
+		keyReleases:     make(chan glfw.Key),
+		highResTicks:    make(chan time.Time),
+		ControlChannel:  make(chan int),
+		lastUpdateTicks: 0}
 
-	mouseMoveRegistrationChannel <- camera.mouseMoves
-	highResRegistrationChannel <- camera.highResTicks
+	mouseMoveRegChannel <- camera.mouseMoves
+	highResRegChannel <- camera.highResTicks
+	keyPressedRegChannel <- camera.keyPresses
+	keyReleasedRegChannel <- camera.keyReleases
 
 	go camera.run()
 
 	return &camera
+}
+
+func parseKeyCode(keyCode glfw.Key, stateTransition bool) {
+	switch keyCode {
+	case input.GetKeyCode(input.MoveUpKey):
+		isUpPressed = stateTransition
+		break
+	case input.GetKeyCode(input.MoveRightKey):
+		isRightPressed = stateTransition
+		break
+	case input.GetKeyCode(input.MoveDownKey):
+		isDownPressed = stateTransition
+		break
+	case input.GetKeyCode(input.MoveLeftKey):
+		isLeftPressed = stateTransition
+		break
+	default:
+		break
+	}
+}
+
+func (c *Camera) handleTickMotion(interval float32) {
+	keyMotionAmount := interval * config.Config.Ui.Camera.KeyMotionFactor * (1.0 / c.zoomFactor)
+	if isLeftPressed {
+		c.offset[0] -= keyMotionAmount
+	}
+
+	if isRightPressed {
+		c.offset[0] += keyMotionAmount
+	}
+
+	if isUpPressed {
+		c.offset[1] -= keyMotionAmount
+	}
+
+	if isDownPressed {
+		c.offset[1] += keyMotionAmount
+	}
 }
 
 func (c *Camera) run() {
@@ -46,7 +105,19 @@ func (c *Camera) run() {
 		case mousePos := <-c.mouseMoves:
 			c.mouseBoardPos = c.MapPixelPosToBoard(mousePos)
 			break
-		case _ = <-c.highResTicks:
+		case keyCode := <-c.keyPresses:
+			parseKeyCode(keyCode, true)
+			break
+		case keyCode := <-c.keyReleases:
+			parseKeyCode(keyCode, false)
+		case time := <-c.highResTicks:
+			if !ticked {
+				ticked = true
+			} else {
+				c.handleTickMotion(float32(time.Sub(lastTimeTick).Seconds()))
+			}
+
+			lastTimeTick = time
 			break
 		case _ = <-c.ControlChannel:
 			return
@@ -59,23 +130,6 @@ func (c *Camera) Update(frameTime float32) {
 		scrollAmount := input.GetScrollOffset().Y()
 		c.zoomFactor *= (1.0 + scrollAmount*config.Config.Ui.Camera.MouseScrollFactor)
 		input.ScrollEvent = false
-	}
-
-	keyMotionAmount := frameTime * config.Config.Ui.Camera.KeyMotionFactor * (1.0 / c.zoomFactor)
-	if input.IsPressed(input.MoveLeftKey) {
-		c.offset[0] -= keyMotionAmount
-	}
-
-	if input.IsPressed(input.MoveRightKey) {
-		c.offset[0] += keyMotionAmount
-	}
-
-	if input.IsPressed(input.MoveUpKey) {
-		c.offset[1] -= keyMotionAmount
-	}
-
-	if input.IsPressed(input.MoveDownKey) {
-		c.offset[1] += keyMotionAmount
 	}
 }
 

@@ -9,23 +9,23 @@ import (
 //  and a low-level timer suitable for simulation updates
 type Timer struct {
 	registeredChannels []chan dto.Time
-	highResChannels    []chan int8
+	highResChannels    []chan time.Time
 
 	ControlChannel      chan int
 	RegistrationChannel chan chan dto.Time
-	HighResRegChannel   chan chan int8
+	HighResRegChannel   chan chan time.Time
 }
 
 func NewTimer() Timer {
 	timer := Timer{
 		registeredChannels:  make([]chan dto.Time, 0),
-		highResChannels:     make([]chan int8, 0),
+		highResChannels:     make([]chan time.Time, 0),
 		ControlChannel:      make(chan int),
 		RegistrationChannel: make(chan chan dto.Time),
-		HighResRegChannel:   make(chan chan int8)}
+		HighResRegChannel:   make(chan chan time.Time)}
 
 	ticker := time.NewTicker(100 * time.Millisecond)
-	highResTicker := time.NewTicker(33 * time.Millisecond)
+	highResTicker := time.NewTicker(20 * time.Millisecond)
 	go timer.run(ticker)
 	go timer.runHighRes(highResTicker)
 
@@ -34,9 +34,9 @@ func NewTimer() Timer {
 
 func (t *Timer) runHighRes(ticker *time.Ticker) {
 	for {
-		_ = <-ticker.C
+		time := <-ticker.C
 		for _, channel := range t.highResChannels {
-			channel <- 0
+			channel <- time
 		}
 
 		select {

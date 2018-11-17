@@ -87,8 +87,12 @@ func CreateDefaultKeyMap() {
 	createSubOptionsKeyMap()
 }
 
+func GetKeyCode(key KeyAssignment) glfw.Key {
+	return keyMap[key]
+}
+
 func IsPressed(key KeyAssignment) bool {
-	return pressedKeys[keyMap[key]]
+	return false
 }
 
 func IsTyped(key KeyAssignment) bool {
