@@ -4,21 +4,22 @@ import (
 	"go-simulate-a-city/common/commoncolor"
 	"go-simulate-a-city/common/commonconfig"
 	"go-simulate-a-city/common/commonopengl"
-
-	"github.com/go-gl/mathgl/mgl32"
-
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/engine"
+	"go-simulate-a-city/sim/engine/core"
 	"go-simulate-a-city/sim/input"
 	"go-simulate-a-city/sim/input/editorEngine"
 	"go-simulate-a-city/sim/ui"
 	"go-simulate-a-city/sim/ui/flat"
-
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"runtime"
 	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 func init() {
@@ -36,6 +37,12 @@ func setInputCallbacks(window *glfw.Window) {
 }
 
 func main() {
+	// Start memory profiling
+	go func() {
+		log.Println("Starting performance diagnostics on localhost:8765...")
+		log.Println(http.ListenAndServe("localhost:8765", nil))
+	}()
+
 	config.Load("./data/config/", "./data/commonConfig.json")
 
 	commonOpenGl.InitGlfw()
@@ -66,9 +73,13 @@ func main() {
 
 	editorEngine.Init()
 
-	camera := flat.NewCamera()
+	core.Init()
+	camera := flat.NewCamera(
+		input.InputBuffer.MouseMoveRegChannel,
+		core.CoreTimer.HighResRegChannel)
 
 	// Setup simulation
+
 	engine := engine.NewEngine()
 
 	terrainOverlays := flat.NewTerrainOverlayManager()
@@ -110,8 +121,8 @@ func main() {
 			}
 		}
 
-		boardPos := camera.MapPixelPosToBoard(input.MousePos)
-		if editorStateUpdated || true { // mouseMoved {
+		boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
+		if editorStateUpdated || true {                         // mouseMoved {
 			engine.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
 			engine.ComputeSnapNodes(&editorEngine.EngineState)
 		}

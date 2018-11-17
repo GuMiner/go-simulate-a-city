@@ -5,6 +5,7 @@ import (
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/engine/core"
+	"go-simulate-a-city/sim/engine/core/dto"
 	"go-simulate-a-city/sim/engine/element"
 	"go-simulate-a-city/sim/engine/power"
 	"go-simulate-a-city/sim/engine/road"
@@ -29,9 +30,6 @@ type Engine struct {
 	snapElements    SnapElements
 
 	Hypotheticals HypotheticalActions
-
-	timer      core.Timer
-	financials core.FinancialAgent
 }
 
 func NewEngine() *Engine {
@@ -49,10 +47,7 @@ func NewEngine() *Engine {
 		roadLineState:       NewRoadLineEditState(),
 		snapElements:        NewSnapElements(),
 
-		Hypotheticals: NewHypotheticalActions(),
-
-		timer:      core.NewTimer(),
-		financials: core.NewFinancialAgent()}
+		Hypotheticals: NewHypotheticalActions()}
 	return &engine
 }
 
@@ -67,7 +62,7 @@ func (e *Engine) addPowerPlantIfValid() {
 
 			element := e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
 			e.elementFinder.Add(element)
-			e.financials.TransactionChannel <- core.NewTransaction("Power Plant", power.GetPlantCost(plantType))
+			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Power Plant", power.GetPlantCost(plantType))
 		}
 	}
 }
@@ -87,7 +82,7 @@ func (e *Engine) updatePowerLineState() {
 		if line != nil {
 			e.elementFinder.Add(line)
 			powerLineCost := e.powerLineState.firstNode.Sub(powerLineEnd).Len() * config.Config.Power.PowerLineCost
-			e.financials.TransactionChannel <- core.NewTransaction("Power Line", powerLineCost)
+			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Power Line", powerLineCost)
 
 			e.powerLineState.firstNode = powerLineEnd
 			e.powerLineState.firstNodeElement = line.GetSnapNodeElement(1)
@@ -111,7 +106,7 @@ func (e *Engine) updateRoadLineState() {
 		if line != nil {
 			e.elementFinder.Add(line)
 			roadLineCost := e.roadLineState.firstNode.Sub(roadLineEnd).Len() * 3000 // TODO: Configurable
-			e.financials.TransactionChannel <- core.NewTransaction("Road", roadLineCost)
+			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Road", roadLineCost)
 
 			e.roadLineState.firstNode = roadLineEnd
 			e.roadLineState.firstNodeElement = line.GetSnapNodeElement(1)

@@ -1,20 +1,21 @@
-package core
+package agent
 
 import (
 	"fmt"
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/engine/core/dto"
 )
 
 type FinancialAgent struct {
 	savings            float32
-	TransactionChannel chan Transaction
+	TransactionChannel chan dto.Transaction
 	ControlChannel     chan int
 }
 
 func NewFinancialAgent() FinancialAgent {
 	agent := FinancialAgent{
 		savings:            config.Config.Sim.StartingSavings,
-		TransactionChannel: make(chan Transaction),
+		TransactionChannel: make(chan dto.Transaction),
 		ControlChannel:     make(chan int)}
 
 	go agent.Run()

@@ -1,24 +1,25 @@
-package core
+package dto
 
 import (
 	"fmt"
 	"go-simulate-a-city/sim/config"
 )
 
+// Defines a simple time DTO
 type Time struct {
 	SimTime float32
 	DayTime float32
 	Days    int
 }
 
-func newTime() Time {
+func NewTime() Time {
 	return Time{
 		SimTime: 0,
 		DayTime: 0,
 		Days:    0}
 }
 
-func (t *Time) update(secondsDelta float32) {
+func (t *Time) Update(secondsDelta float32) {
 	t.SimTime += 0.1
 	t.DayTime += 0.1
 	if t.DayTime > config.Config.Sim.SecondsPerDay {

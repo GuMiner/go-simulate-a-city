@@ -11,16 +11,47 @@ import (
 )
 
 type Camera struct {
+	mouseMoves     chan mgl32.Vec2
+	highResTicks   chan int8
+	ControlChannel chan int
+
 	zoomFactor float32
 	offset     mgl32.Vec2
+
+	mouseBoardPos mgl32.Vec2
 }
 
-func NewCamera() *Camera {
+func NewCamera(
+	mouseMoveRegistrationChannel chan chan mgl32.Vec2,
+	highResRegistrationChannel chan chan int8) *Camera {
+
 	camera := Camera{
-		zoomFactor: 1.0,
-		offset:     mgl32.Vec2{0, 0}}
+		zoomFactor:     1.0,
+		offset:         mgl32.Vec2{0, 0},
+		mouseMoves:     make(chan mgl32.Vec2),
+		highResTicks:   make(chan int8),
+		ControlChannel: make(chan int)}
+
+	mouseMoveRegistrationChannel <- camera.mouseMoves
+	highResRegistrationChannel <- camera.highResTicks
+
+	go camera.run()
 
 	return &camera
+}
+
+func (c *Camera) run() {
+	for {
+		select {
+		case mousePos := <-c.mouseMoves:
+			c.mouseBoardPos = c.MapPixelPosToBoard(mousePos)
+			break
+		case _ = <-c.highResTicks:
+			break
+		case _ = <-c.ControlChannel:
+			return
+		}
+	}
 }
 
 func (c *Camera) Update(frameTime float32) {

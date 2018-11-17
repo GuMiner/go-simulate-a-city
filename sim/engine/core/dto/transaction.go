@@ -1,5 +1,6 @@
-package core
+package dto
 
+// Defines a simple transaction
 type Transaction struct {
 	Name   string
 	Amount float32
