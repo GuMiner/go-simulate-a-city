@@ -1,7 +1,6 @@
 package flat
 
 import (
-	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/ui"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -14,7 +13,6 @@ type TerrainOverlayManager struct {
 
 	cameraOffset    mgl32.Vec2
 	cameraScale     float32
-	activeOverlays  []commonMath.IntVec2
 	TerrainOverlays map[int]map[int]*TerrainOverlay
 }
 
@@ -36,9 +34,10 @@ func NewTerrainOverlayManager(
 	offsetChangeRegChannel chan chan mgl32.Vec2,
 	scaleChangeRegChannel chan chan float32) *TerrainOverlayManager {
 	manager := TerrainOverlayManager{
+		cameraOffset:        mgl32.Vec2{0, 0},
+		cameraScale:         1.0,
 		offsetChangeChannel: make(chan mgl32.Vec2, 10),
 		scaleChangeChannel:  make(chan float32, 10),
-		activeOverlays:      make([]commonMath.IntVec2, 0),
 		TerrainOverlays:     make(map[int]map[int]*TerrainOverlay)}
 
 	offsetChangeRegChannel <- manager.offsetChangeChannel
@@ -64,9 +63,9 @@ func (t *TerrainOverlayManager) drainInputChannels() {
 
 func (t *TerrainOverlayManager) Render() {
 	t.drainInputChannels()
-
-	for _, region := range t.activeOverlays {
-		overlay := t.TerrainOverlays[region.X()][region.Y()]
+	visibleRegions := ComputeVisibleRegions(t.cameraOffset, t.cameraScale)
+	for _, region := range visibleRegions {
+		overlay := t.GetOrAddTerrainOverlay(region.X(), region.Y())
 		overlay.UpdateCameraOffset(region.X(), region.Y(), t.cameraOffset, t.cameraScale)
 		ui.Ui.OverlayProgram.Render(overlay.GetOverlay())
 	}

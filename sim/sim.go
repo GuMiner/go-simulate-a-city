@@ -113,7 +113,7 @@ func main() {
 		// Load new terrain regions based on what is visible.
 		engine.PrecacheRegions(camera.ComputePrecacheRegions())
 
-		visibleRegions := camera.ComputeVisibleRegions()
+		visibleRegions := flat.ComputeVisibleRegions(camera.GetOffset(), camera.GetZoomFactor())
 		for _, region := range visibleRegions {
 			subMap := engine.GetRegionMap(region)
 
@@ -162,16 +162,8 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		// Render each visible region
-		visibleRegions := camera.ComputeVisibleRegions()
 		ui.Ui.OverlayProgram.PreRender()
 		terrainOverlayManager.Render()
-
-		// TODO: Hook up the rest of the logic so I can get rid of this
-		for _, region := range visibleRegions {
-			overlay := terrainOverlayManager.GetOrAddTerrainOverlay(region.X(), region.Y())
-			overlay.UpdateCameraOffset(region.X(), region.Y(), camera.GetOffset(), camera.GetZoomFactor())
-			ui.Ui.OverlayProgram.Render(overlay.GetOverlay())
-		}
 
 		ui.Ui.RegionProgram.PreRender()
 		for _, hypotheticalRegion := range engine.Hypotheticals.Regions {

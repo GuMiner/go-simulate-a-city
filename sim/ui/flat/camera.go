@@ -138,6 +138,9 @@ func (c *Camera) run() {
 			break
 		case scrollAmount := <-c.mouseScrolls:
 			c.zoomFactor *= (1.0 + scrollAmount*config.Config.Ui.Camera.MouseScrollFactor)
+			for _, reg := range c.scaleChangeRegs {
+				reg <- c.zoomFactor
+			}
 			break
 		case keyCode := <-c.keyPresses:
 			parseKeyCode(keyCode, true)
@@ -160,16 +163,16 @@ func (c *Camera) run() {
 	}
 }
 
-func (c *Camera) getMinMaxVisibleRange() (minTile mgl32.Vec2, maxTile mgl32.Vec2) {
+func getMinMaxVisibleRange(offset mgl32.Vec2, scale float32) (minTile mgl32.Vec2, maxTile mgl32.Vec2) {
 	regionSize := config.Config.Terrain.RegionSize
 
-	minTile = c.MapToBoard(mgl32.Vec2{0, 0}).Mul(1.0 / float32(regionSize))
-	maxTile = c.MapToBoard(mgl32.Vec2{1, 1}).Mul(1.0 / float32(regionSize))
+	minTile = MapToBoard(mgl32.Vec2{0, 0}, offset, scale).Mul(1.0 / float32(regionSize))
+	maxTile = MapToBoard(mgl32.Vec2{1, 1}, offset, scale).Mul(1.0 / float32(regionSize))
 	return minTile, maxTile
 }
 
-func (c *Camera) ComputeVisibleRegions() []commonMath.IntVec2 {
-	minTile, maxTile := c.getMinMaxVisibleRange()
+func ComputeVisibleRegions(offset mgl32.Vec2, scale float32) []commonMath.IntVec2 {
+	minTile, maxTile := getMinMaxVisibleRange(offset, scale)
 
 	visibleTiles := make([]commonMath.IntVec2, 0)
 	for i := int(minTile.X() - 1.0); i <= int(maxTile.X()+1.0); i++ {
@@ -182,7 +185,7 @@ func (c *Camera) ComputeVisibleRegions() []commonMath.IntVec2 {
 }
 
 func (c *Camera) ComputePrecacheRegions() []commonMath.IntVec2 {
-	minTile, maxTile := c.getMinMaxVisibleRange()
+	minTile, maxTile := getMinMaxVisibleRange(c.offset, c.zoomFactor)
 
 	visibleTiles := make([]commonMath.IntVec2, 0)
 	for i := int(minTile.X() - 2.0); i <= int(maxTile.X()+2.0); i++ {
@@ -202,15 +205,18 @@ func (c *Camera) ComputePrecacheRegions() []commonMath.IntVec2 {
 // Maps a position in pixels to the board
 func (c *Camera) MapPixelPosToBoard(pixelPos mgl32.Vec2) mgl32.Vec2 {
 	windowSize := commonOpenGl.GetWindowSize()
-	return c.MapToBoard(mgl32.Vec2{pixelPos.X() / windowSize.X(), pixelPos.Y() / windowSize.Y()})
+	return MapToBoard(
+		mgl32.Vec2{pixelPos.X() / windowSize.X(), pixelPos.Y() / windowSize.Y()},
+		c.offset,
+		c.zoomFactor)
 }
 
 // Maps a (0, 0) to (1, 1) screen position to a board location.
-func (c *Camera) MapToBoard(screenPos mgl32.Vec2) mgl32.Vec2 {
+func MapToBoard(screenPos mgl32.Vec2, offset mgl32.Vec2, scale float32) mgl32.Vec2 {
 	windowSize := commonOpenGl.GetWindowSize()
 
 	modifiedRegionPos := mgl32.Vec2{(screenPos.X() - 0.5) * windowSize.X(), (screenPos.Y() - 0.5) * windowSize.Y()}
-	regionPos := modifiedRegionPos.Mul(1.0 / c.zoomFactor).Add(c.offset)
+	regionPos := modifiedRegionPos.Mul(1.0 / scale).Add(offset)
 
 	return regionPos
 }
