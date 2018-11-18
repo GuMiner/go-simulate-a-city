@@ -15,7 +15,7 @@ type FinancialAgent struct {
 func NewFinancialAgent() FinancialAgent {
 	agent := FinancialAgent{
 		savings:            config.Config.Sim.StartingSavings,
-		TransactionChannel: make(chan dto.Transaction),
+		TransactionChannel: make(chan dto.Transaction, 2),
 		ControlChannel:     make(chan int)}
 
 	go agent.Run()

@@ -76,6 +76,7 @@ func main() {
 	core.Init()
 	camera := flat.NewCamera(
 		input.InputBuffer.MouseMoveRegChannel,
+		input.InputBuffer.MouseScrollRegChannel,
 		input.InputBuffer.PressedKeysRegChannel,
 		input.InputBuffer.ReleasedKeysRegChannel,
 		core.CoreTimer.HighResRegChannel)
@@ -84,7 +85,9 @@ func main() {
 
 	engine := engine.NewEngine()
 
-	terrainOverlayManager := flat.NewTerrainOverlayManager()
+	terrainOverlayManager := flat.NewTerrainOverlayManager(
+		camera.OffsetChangeRegChannel,
+		camera.ScaleChangeRegChannel)
 	defer terrainOverlayManager.Delete()
 
 	startTime := time.Now()
@@ -100,8 +103,6 @@ func main() {
 
 		// Must be first.
 		glfw.PollEvents()
-
-		camera.Update(frameTime)
 
 		editorStateUpdated, editorSubStateUpdated := editorEngine.Update()
 		if editorStateUpdated || editorSubStateUpdated {

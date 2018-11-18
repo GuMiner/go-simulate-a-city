@@ -8,9 +8,6 @@ import (
 var keyEvent bool = false
 var typedKeys map[glfw.Key]bool = make(map[glfw.Key]bool)
 
-var ScrollEvent bool = false
-var mouseScrollOffset mgl32.Vec2 = mgl32.Vec2{0, 0}
-
 var MousePressEvent bool = false
 var MouseReleaseEvent bool = false
 var PressedButtons map[glfw.MouseButton]bool = make(map[glfw.MouseButton]bool)
@@ -20,15 +17,7 @@ func HandleMouseMove(window *glfw.Window, xPos float64, yPos float64) {
 }
 
 func HandleMouseScroll(window *glfw.Window, xOffset, yOffset float64) {
-	mouseScrollOffset = mouseScrollOffset.Add(mgl32.Vec2{float32(xOffset), float32(yOffset)})
-	ScrollEvent = true
-}
-
-func GetScrollOffset() mgl32.Vec2 {
-	offset := mouseScrollOffset
-	mouseScrollOffset = mgl32.Vec2{0, 0}
-
-	return offset
+	InputBuffer.MouseScrollChannel <- float32(yOffset)
 }
 
 func HandleMouseButton(window *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {

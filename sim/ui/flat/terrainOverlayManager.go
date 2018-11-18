@@ -9,6 +9,9 @@ import (
 )
 
 type TerrainOverlayManager struct {
+	offsetChangeChannel chan mgl32.Vec2
+	scaleChangeChannel  chan float32
+
 	cameraOffset    mgl32.Vec2
 	cameraScale     float32
 	activeOverlays  []commonMath.IntVec2
@@ -29,15 +32,39 @@ func (t *TerrainOverlayManager) GetOrAddTerrainOverlay(x, y int) *TerrainOverlay
 	return t.TerrainOverlays[x][y]
 }
 
-func NewTerrainOverlayManager() *TerrainOverlayManager {
+func NewTerrainOverlayManager(
+	offsetChangeRegChannel chan chan mgl32.Vec2,
+	scaleChangeRegChannel chan chan float32) *TerrainOverlayManager {
 	manager := TerrainOverlayManager{
-		activeOverlays:  make([]commonMath.IntVec2, 0),
-		TerrainOverlays: make(map[int]map[int]*TerrainOverlay)}
+		offsetChangeChannel: make(chan mgl32.Vec2, 10),
+		scaleChangeChannel:  make(chan float32, 10),
+		activeOverlays:      make([]commonMath.IntVec2, 0),
+		TerrainOverlays:     make(map[int]map[int]*TerrainOverlay)}
+
+	offsetChangeRegChannel <- manager.offsetChangeChannel
+	scaleChangeRegChannel <- manager.scaleChangeChannel
 
 	return &manager
 }
 
+func (t *TerrainOverlayManager) drainInputChannels() {
+	inputLeft := true
+	for inputLeft {
+		select {
+		case t.cameraOffset = <-t.offsetChangeChannel:
+			break
+		case t.cameraScale = <-t.scaleChangeChannel:
+			break
+		default:
+			inputLeft = false
+			break
+		}
+	}
+}
+
 func (t *TerrainOverlayManager) Render() {
+	t.drainInputChannels()
+
 	for _, region := range t.activeOverlays {
 		overlay := t.TerrainOverlays[region.X()][region.Y()]
 		overlay.UpdateCameraOffset(region.X(), region.Y(), t.cameraOffset, t.cameraScale)
