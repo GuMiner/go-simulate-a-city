@@ -211,23 +211,31 @@ func (c *Camera) MapPositionToScreen(point mgl32.Vec2) mgl32.Vec2 {
 
 // Resizes a full-size region to the appropriate scale given the current screen size and zoom factor
 // Returns the screen size (a full size tile will span from (0, 0) to (1, 1))
-func (c *Camera) GetRegionScale() mgl32.Vec2 {
+func GetRegionScale(zoomFactor float32) mgl32.Vec2 {
 	regionSize := config.Config.Terrain.RegionSize
 	windowSize := commonOpenGl.GetWindowSize()
 	return mgl32.Vec2{
-		c.zoomFactor * float32(regionSize) / windowSize.X(),
-		c.zoomFactor * float32(regionSize) / windowSize.Y()}
+		zoomFactor * float32(regionSize) / windowSize.X(),
+		zoomFactor * float32(regionSize) / windowSize.Y()}
 }
 
 // Returns the screen position ((0, 0) to (1, 1)) of the region tile requested
-func (c *Camera) GetRegionOffset(x, y int) mgl32.Vec2 {
+func GetRegionOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) mgl32.Vec2 {
 	regionSize := config.Config.Terrain.RegionSize
 	windowSize := commonOpenGl.GetWindowSize()
 
 	regionStart := mgl32.Vec2{float32(x * regionSize), float32(y * regionSize)}
-	modifiedRegionStart := regionStart.Sub(c.offset).Mul(c.zoomFactor)
+	modifiedRegionStart := regionStart.Sub(offset).Mul(zoomFactor)
 
 	return mgl32.Vec2{modifiedRegionStart.X()/windowSize.X() + 0.5, modifiedRegionStart.Y()/windowSize.Y() + 0.5}
+}
+
+func (c *Camera) GetZoomFactor() float32 {
+	return c.zoomFactor
+}
+
+func (c *Camera) GetOffset() mgl32.Vec2 {
+	return c.offset
 }
 
 func (c *Camera) getScaleMotionFactor() float32 {

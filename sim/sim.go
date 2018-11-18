@@ -84,8 +84,8 @@ func main() {
 
 	engine := engine.NewEngine()
 
-	terrainOverlays := flat.NewTerrainOverlayManager()
-	defer terrainOverlays.Delete()
+	terrainOverlayManager := flat.NewTerrainOverlayManager()
+	defer terrainOverlayManager.Delete()
 
 	startTime := time.Now()
 	frameTime := float32(0.1)
@@ -116,7 +116,7 @@ func main() {
 		for _, region := range visibleRegions {
 			subMap := engine.GetRegionMap(region)
 
-			overlay := terrainOverlays.GetOrAddTerrainOverlay(region.X(), region.Y())
+			overlay := terrainOverlayManager.GetOrAddTerrainOverlay(region.X(), region.Y())
 			if subMap.Dirty {
 				overlay.SetTerrain(subMap.Texels)
 				subMap.Dirty = false
@@ -163,9 +163,12 @@ func main() {
 		// Render each visible region
 		visibleRegions := camera.ComputeVisibleRegions()
 		ui.Ui.OverlayProgram.PreRender()
+		terrainOverlayManager.Render()
+
+		// TODO: Hook up the rest of the logic so I can get rid of this
 		for _, region := range visibleRegions {
-			overlay := terrainOverlays.GetOrAddTerrainOverlay(region.X(), region.Y())
-			overlay.UpdateCameraOffset(region.X(), region.Y(), camera)
+			overlay := terrainOverlayManager.GetOrAddTerrainOverlay(region.X(), region.Y())
+			overlay.UpdateCameraOffset(region.X(), region.Y(), camera.GetOffset(), camera.GetZoomFactor())
 			ui.Ui.OverlayProgram.Render(overlay.GetOverlay())
 		}
 

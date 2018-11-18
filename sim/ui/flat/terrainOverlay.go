@@ -9,39 +9,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type TerrainOverlayManager struct {
-	TerrainOverlays map[int]map[int]*TerrainOverlay
-}
-
-func (t *TerrainOverlayManager) GetOrAddTerrainOverlay(x, y int) *TerrainOverlay {
-	if _, ok := t.TerrainOverlays[x]; !ok {
-		t.TerrainOverlays[x] = make(map[int]*TerrainOverlay)
-	}
-
-	if _, ok := t.TerrainOverlays[x][y]; !ok {
-		var textureId uint32
-		gl.GenTextures(1, &textureId)
-		t.TerrainOverlays[x][y] = NewTerrainOverlay(textureId)
-	}
-
-	return t.TerrainOverlays[x][y]
-}
-
-func NewTerrainOverlayManager() *TerrainOverlayManager {
-	manager := TerrainOverlayManager{
-		TerrainOverlays: make(map[int]map[int]*TerrainOverlay)}
-
-	return &manager
-}
-
-func (t *TerrainOverlayManager) Delete() {
-	for _, value := range t.TerrainOverlays {
-		for _, overlay := range value {
-			gl.DeleteTextures(1, &overlay.textureId)
-		}
-	}
-}
-
 type TerrainOverlay struct {
 	textureId uint32
 	overlay   *overlay.Overlay
@@ -59,11 +26,11 @@ func (t *TerrainOverlay) GetOverlay() *overlay.Overlay {
 	return t.overlay
 }
 
-func (t *TerrainOverlay) UpdateCameraOffset(x, y int, camera *Camera) {
-	offset := camera.GetRegionOffset(x, y)
-	scale := camera.GetRegionScale()
+func (t *TerrainOverlay) UpdateCameraOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) {
+	regionOffset := GetRegionOffset(x, y, offset, zoomFactor)
+	scale := GetRegionScale(zoomFactor)
 
-	t.overlay.UpdateLocation(offset, scale, 1.0)
+	t.overlay.UpdateLocation(regionOffset, scale, 1.0)
 }
 
 func (t *TerrainOverlay) SetTerrain(texels [][]terrain.TerrainTexel) {
