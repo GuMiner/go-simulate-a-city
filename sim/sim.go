@@ -116,8 +116,8 @@ func main() {
 		for _, region := range visibleRegions {
 			subMap := engine.GetRegionMap(region)
 
-			overlay, isNew := terrainOverlays.GetOrAddTerrainOverlay(region.X(), region.Y())
-			if isNew || subMap.Dirty {
+			overlay := terrainOverlays.GetOrAddTerrainOverlay(region.X(), region.Y())
+			if subMap.Dirty {
 				overlay.SetTerrain(subMap.Texels)
 				subMap.Dirty = false
 			}
@@ -164,7 +164,7 @@ func main() {
 		visibleRegions := camera.ComputeVisibleRegions()
 		ui.Ui.OverlayProgram.PreRender()
 		for _, region := range visibleRegions {
-			overlay, _ := terrainOverlays.GetOrAddTerrainOverlay(region.X(), region.Y())
+			overlay := terrainOverlays.GetOrAddTerrainOverlay(region.X(), region.Y())
 			overlay.UpdateCameraOffset(region.X(), region.Y(), camera)
 			ui.Ui.OverlayProgram.Render(overlay.GetOverlay())
 		}

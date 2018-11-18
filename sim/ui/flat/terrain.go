@@ -9,29 +9,11 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type TerrainOverlay struct {
-	textureId uint32
-	overlay   *overlay.Overlay
-}
-
-func NewTerrainOverlay(textureId uint32) *TerrainOverlay {
-	overlay := TerrainOverlay{
-		textureId: textureId,
-		overlay:   overlay.NewOverlay()}
-
-	return &overlay
-}
-
-func (t *TerrainOverlay) GetOverlay() *overlay.Overlay {
-	return t.overlay
-}
-
 type TerrainOverlayManager struct {
 	TerrainOverlays map[int]map[int]*TerrainOverlay
 }
 
-func (t *TerrainOverlayManager) GetOrAddTerrainOverlay(x, y int) (*TerrainOverlay, bool) {
-	isNew := false
+func (t *TerrainOverlayManager) GetOrAddTerrainOverlay(x, y int) *TerrainOverlay {
 	if _, ok := t.TerrainOverlays[x]; !ok {
 		t.TerrainOverlays[x] = make(map[int]*TerrainOverlay)
 	}
@@ -40,10 +22,9 @@ func (t *TerrainOverlayManager) GetOrAddTerrainOverlay(x, y int) (*TerrainOverla
 		var textureId uint32
 		gl.GenTextures(1, &textureId)
 		t.TerrainOverlays[x][y] = NewTerrainOverlay(textureId)
-		isNew = true
 	}
 
-	return t.TerrainOverlays[x][y], isNew
+	return t.TerrainOverlays[x][y]
 }
 
 func NewTerrainOverlayManager() *TerrainOverlayManager {
@@ -61,6 +42,23 @@ func (t *TerrainOverlayManager) Delete() {
 	}
 }
 
+type TerrainOverlay struct {
+	textureId uint32
+	overlay   *overlay.Overlay
+}
+
+func NewTerrainOverlay(textureId uint32) *TerrainOverlay {
+	overlay := TerrainOverlay{
+		textureId: textureId,
+		overlay:   overlay.NewOverlay()}
+
+	return &overlay
+}
+
+func (t *TerrainOverlay) GetOverlay() *overlay.Overlay {
+	return t.overlay
+}
+
 func (t *TerrainOverlay) UpdateCameraOffset(x, y int, camera *Camera) {
 	offset := camera.GetRegionOffset(x, y)
 	scale := camera.GetRegionScale()
@@ -75,7 +73,7 @@ func (t *TerrainOverlay) SetTerrain(texels [][]terrain.TerrainTexel) {
 		for j := 0; j < regionSize; j++ {
 			height := texels[i][j].Height
 
-			color, percent := GetTerrainColor(height)
+			color, percent := getTerrainColor(height)
 			byteTerrain[(i+j*regionSize)*4] = uint8(color.X() * percent)
 			byteTerrain[(i+j*regionSize)*4+1] = uint8(color.Y() * percent)
 			byteTerrain[(i+j*regionSize)*4+2] = uint8(color.Z() * percent)
@@ -97,7 +95,7 @@ func (t *TerrainOverlay) SetTerrain(texels [][]terrain.TerrainTexel) {
 }
 
 // Given a height, returns the terrain color and percentage within that level
-func GetTerrainColor(height float32) (mgl32.Vec3, float32) {
+func getTerrainColor(height float32) (mgl32.Vec3, float32) {
 	terrainType, percent := terrain.GetTerrainType(height)
 
 	switch terrainType {

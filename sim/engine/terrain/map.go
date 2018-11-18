@@ -73,6 +73,7 @@ func (t *TerrainSubMap) GenerateSubMap(x, y int) {
 	}
 
 	t.generated = true
+	t.Dirty = true
 
 	fmt.Printf("Generated sub map terrain for [%v, %v]\n", x, y)
 	t.generationCompleteSignal <- true
