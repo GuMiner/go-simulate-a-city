@@ -1,7 +1,6 @@
 package terrain
 
 import (
-	"fmt"
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/engine/subtile"
@@ -9,98 +8,48 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-type TerrainTexel struct {
-	TerrainType TerrainType
-
-	// Absolute height
-	Height float32
-
-	// Relative height for the given terrain type
-	HeightPercent float32
-}
-
-func (t *TerrainTexel) Normalize() {
-	t.Height = commonMath.MinFloat32(1, commonMath.MaxFloat32(0, t.Height))
-	t.TerrainType, t.HeightPercent = GetTerrainType(t.Height)
-}
-
-type TerrainSubMap struct {
-	Texels [][]TerrainTexel
-
-	// Flags for knowing when asynchronous generation is complete
-	generated                bool
-	generationCompleteSignal chan bool
-
-	// Flag to indicate that the terrain is dirty and must be re-rendered
-	Dirty bool
-}
-
 type TerrainMap struct {
-	SubMaps map[int]map[int]*TerrainSubMap
+	registeredNewTerrainChannels []chan *TerrainUpdate
+
+	SubMaps              map[int]map[int]*TerrainSubMap
+	NewTerrainRegChannel chan chan *TerrainUpdate
+	ControlChannel       chan int
 }
 
 func NewTerrainMap() *TerrainMap {
 	terrainMap := TerrainMap{
-		SubMaps: make(map[int]map[int]*TerrainSubMap)}
+		registeredNewTerrainChannels: make([]chan *TerrainUpdate, 0),
+		NewTerrainRegChannel:         make(chan chan *TerrainUpdate),
+		ControlChannel:               make(chan int),
+		SubMaps:                      make(map[int]map[int]*TerrainSubMap)}
+
+	go terrainMap.run()
 
 	return &terrainMap
 }
 
-func NewTerrainSubMap(x, y int) *TerrainSubMap {
-	regionSize := config.Config.Terrain.RegionSize
-
-	terrainSubMap := TerrainSubMap{
-		Texels:                   make([][]TerrainTexel, regionSize*regionSize),
-		generated:                false,
-		generationCompleteSignal: make(chan bool)}
-
-	for i := 0; i < regionSize; i++ {
-		terrainSubMap.Texels[i] = make([]TerrainTexel, regionSize)
-	}
-
-	return &terrainSubMap
-}
-
-func (t *TerrainSubMap) GenerateSubMap(x, y int) {
-	regionSize := config.Config.Terrain.RegionSize
-	heights := Generate(regionSize, regionSize, x*regionSize, y*regionSize)
-	for i := 0; i < regionSize; i++ {
-		for j := 0; j < regionSize; j++ {
-			height := heights[i+j*regionSize]
-			t.Texels[i][j] = TerrainTexel{Height: height}
-			t.Texels[i][j].Normalize()
+func (t *TerrainMap) run() {
+	for {
+		select {
+		case reg := <-t.NewTerrainRegChannel:
+			t.registeredNewTerrainChannels = append(t.registeredNewTerrainChannels, reg)
+			break
+		case _ = <-t.ControlChannel:
+			return
 		}
 	}
-
-	t.generated = true
-	t.Dirty = true
-
-	fmt.Printf("Generated sub map terrain for [%v, %v]\n", x, y)
-	t.generationCompleteSignal <- true
-	close(t.generationCompleteSignal)
-
-	fmt.Printf("  Terrain sub map [%v, %v] consumed.\n", x, y)
 }
 
-// Adds a region to the map, without waiting for its generation to complete.
-func (t *TerrainMap) AddRegionIfMissing(x, y int) {
+func (t *TerrainMap) GetOrAddRegion(x, y int) *TerrainSubMap {
 	if _, ok := t.SubMaps[x]; !ok {
 		t.SubMaps[x] = make(map[int]*TerrainSubMap)
 	}
 
 	if _, ok := t.SubMaps[x][y]; !ok {
 		t.SubMaps[x][y] = NewTerrainSubMap(x, y)
-		go t.SubMaps[x][y].GenerateSubMap(x, y)
-	}
-}
-
-func (t *TerrainMap) GetOrAddRegion(x, y int) *TerrainSubMap {
-	t.AddRegionIfMissing(x, y)
-
-	// If added but not generated, a generation thread is running
-	// Wait for it before continuing.
-	if !t.SubMaps[x][y].generated {
-		_ = <-t.SubMaps[x][y].generationCompleteSignal
+		for _, reg := range t.registeredNewTerrainChannels {
+			reg <- NewTerrainUpdate(t.SubMaps[x][y], x, y)
+		}
 	}
 
 	return t.SubMaps[x][y]
@@ -143,7 +92,9 @@ func (t *TerrainMap) performRegionBasedUpdate(region commonMath.Region, amount f
 		texel, texelRegion := t.getTexel(modifiedPos)
 
 		update(region.Position, modifiedPos, texel, centralHeight, amount, region.Scale)
-		texelRegion.Dirty = true
+		for _, reg := range t.registeredNewTerrainChannels {
+			reg <- NewTerrainUpdate(texelRegion, x, y)
+		}
 
 		// Never early exit
 		return false

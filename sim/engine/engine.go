@@ -241,7 +241,7 @@ func (e *Engine) StepSim(stepAmount float32) {
 // Update methods based on UI
 func (e *Engine) PrecacheRegions(regions []commonMath.IntVec2) {
 	for _, region := range regions {
-		e.terrainMap.AddRegionIfMissing(region.X(), region.Y())
+		e.terrainMap.GetOrAddRegion(region.X(), region.Y())
 	}
 }
 
@@ -259,6 +259,10 @@ func (e *Engine) GetRegionMap(region commonMath.IntVec2) *terrain.TerrainSubMap 
 	}
 
 	return submap
+}
+
+func (e *Engine) GetTerrainMap() *terrain.TerrainMap {
+	return e.terrainMap
 }
 
 func (e *Engine) GetPowerGrid() *power.PowerGrid {

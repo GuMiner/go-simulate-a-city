@@ -87,7 +87,8 @@ func main() {
 
 	terrainOverlayManager := flat.NewTerrainOverlayManager(
 		camera.OffsetChangeRegChannel,
-		camera.ScaleChangeRegChannel)
+		camera.ScaleChangeRegChannel,
+		engine.GetTerrainMap().NewTerrainRegChannel)
 	defer terrainOverlayManager.Delete()
 
 	startTime := time.Now()
@@ -110,19 +111,17 @@ func main() {
 			ui.UpdateEditorState(editorEngine.EngineState, window)
 		}
 
+		// TODO -- this all should be event / message based.
+		// To avoid blocking with what exists now, getting the region map runs on its own goroutine
 		// Load new terrain regions based on what is visible.
-		engine.PrecacheRegions(camera.ComputePrecacheRegions())
+		// engine.PrecacheRegions(camera.ComputePrecacheRegions())
 
 		visibleRegions := flat.ComputeVisibleRegions(camera.GetOffset(), camera.GetZoomFactor())
-		for _, region := range visibleRegions {
-			subMap := engine.GetRegionMap(region)
-
-			overlay := terrainOverlayManager.GetOrAddTerrainOverlay(region.X(), region.Y())
-			if subMap.Dirty {
-				overlay.SetTerrain(subMap.Texels)
-				subMap.Dirty = false
+		go func() {
+			for _, region := range visibleRegions {
+				engine.GetRegionMap(region)
 			}
-		}
+		}()
 
 		boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
 		if editorStateUpdated || true {                         // mouseMoved {
