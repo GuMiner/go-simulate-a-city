@@ -33,12 +33,12 @@ func SetupInputBufferAgent() {
 		mouseScrollRegistrations: make([]chan float32, 0),
 		keyPressedRegistrations:  make([]chan glfw.Key, 0),
 		keyReleasedRegistrations: make([]chan glfw.Key, 0),
-		MouseMoveChannel:         make(chan mgl32.Vec2),
+		MouseMoveChannel:         make(chan mgl32.Vec2, 30),
 		MouseMoveRegChannel:      make(chan chan mgl32.Vec2),
-		MouseScrollChannel:       make(chan float32),
+		MouseScrollChannel:       make(chan float32, 30),
 		MouseScrollRegChannel:    make(chan chan float32),
-		PressedKeysChannel:       make(chan glfw.Key),
-		ReleasedKeysChannel:      make(chan glfw.Key),
+		PressedKeysChannel:       make(chan glfw.Key, 50),
+		ReleasedKeysChannel:      make(chan glfw.Key, 50),
 		PressedKeysRegChannel:    make(chan chan glfw.Key),
 		ReleasedKeysRegChannel:   make(chan chan glfw.Key)}
 
