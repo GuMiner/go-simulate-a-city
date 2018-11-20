@@ -3,39 +3,81 @@ package terrain
 import (
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/core/gamegrid"
 	"go-simulate-a-city/sim/engine/subtile"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
+var FORCE_REFRESH int = 2
+
 type TerrainMap struct {
+	cameraOffset                 mgl32.Vec2
+	cameraScale                  float32
+	offsetChangeChannel          chan mgl32.Vec2
+	scaleChangeChannel           chan float32
 	registeredNewTerrainChannels []chan *TerrainUpdate
+	registeredNewRegionChannels  []chan commonMath.IntVec2
 
 	SubMaps              map[int]map[int]*TerrainSubMap
 	NewTerrainRegChannel chan chan *TerrainUpdate
+	NewRegionRegChannel  chan chan commonMath.IntVec2
 	ControlChannel       chan int
 }
 
-func NewTerrainMap() *TerrainMap {
+func NewTerrainMap(
+	camOffsetRegChannel chan chan mgl32.Vec2,
+	camScaleRegChannel chan chan float32) *TerrainMap {
 	terrainMap := TerrainMap{
+		cameraOffset:                 mgl32.Vec2{0, 0},
+		cameraScale:                  1.0,
+		offsetChangeChannel:          make(chan mgl32.Vec2, 3),
+		scaleChangeChannel:           make(chan float32, 3),
 		registeredNewTerrainChannels: make([]chan *TerrainUpdate, 0),
+		registeredNewRegionChannels:  make([]chan commonMath.IntVec2, 0),
 		NewTerrainRegChannel:         make(chan chan *TerrainUpdate),
+		NewRegionRegChannel:          make(chan chan commonMath.IntVec2),
 		ControlChannel:               make(chan int),
 		SubMaps:                      make(map[int]map[int]*TerrainSubMap)}
+
+	camOffsetRegChannel <- terrainMap.offsetChangeChannel
+	camScaleRegChannel <- terrainMap.scaleChangeChannel
 
 	go terrainMap.run()
 
 	return &terrainMap
 }
 
+func (t *TerrainMap) precacheRegions() {
+	regions := gamegrid.ComputePrecacheRegions(t.cameraOffset, t.cameraScale)
+	for _, region := range regions {
+		_ = t.GetOrAddRegion(region.X(), region.Y())
+	}
+}
+
 func (t *TerrainMap) run() {
 	for {
 		select {
+		case t.cameraOffset = <-t.offsetChangeChannel:
+			t.precacheRegions()
+			break
+		case t.cameraScale = <-t.scaleChangeChannel:
+			t.precacheRegions()
+			break
 		case reg := <-t.NewTerrainRegChannel:
 			t.registeredNewTerrainChannels = append(t.registeredNewTerrainChannels, reg)
 			break
-		case _ = <-t.ControlChannel:
-			return
+		case reg := <-t.NewRegionRegChannel:
+			t.registeredNewRegionChannels = append(t.registeredNewRegionChannels, reg)
+		case control := <-t.ControlChannel:
+			if control == FORCE_REFRESH {
+				regions := gamegrid.ComputeVisibleRegions(t.cameraOffset, t.cameraScale)
+				for _, region := range regions {
+					_ = t.GetOrAddRegion(region.X(), region.Y())
+				}
+			} else {
+				return
+			}
 		}
 	}
 }
@@ -47,8 +89,13 @@ func (t *TerrainMap) GetOrAddRegion(x, y int) *TerrainSubMap {
 
 	if _, ok := t.SubMaps[x][y]; !ok {
 		t.SubMaps[x][y] = NewTerrainSubMap(x, y)
+		terrainUpdate := NewTerrainUpdate(t.SubMaps[x][y], x, y)
 		for _, reg := range t.registeredNewTerrainChannels {
-			reg <- NewTerrainUpdate(t.SubMaps[x][y], x, y)
+			reg <- terrainUpdate
+		}
+
+		for _, reg := range t.registeredNewRegionChannels {
+			reg <- commonMath.IntVec2{x, y}
 		}
 	}
 
@@ -92,8 +139,9 @@ func (t *TerrainMap) performRegionBasedUpdate(region commonMath.Region, amount f
 		texel, texelRegion := t.getTexel(modifiedPos)
 
 		update(region.Position, modifiedPos, texel, centralHeight, amount, region.Scale)
+		terrainUpdate := NewTerrainUpdate(texelRegion, x, y)
 		for _, reg := range t.registeredNewTerrainChannels {
-			reg <- NewTerrainUpdate(texelRegion, x, y)
+			reg <- terrainUpdate
 		}
 
 		// Never early exit

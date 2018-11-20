@@ -32,22 +32,30 @@ type Engine struct {
 	Hypotheticals HypotheticalActions
 }
 
-func NewEngine() *Engine {
+// TODO: This should not take in these parameters. These should be populated in the
+// well-known listings of channels
+func NewEngine(
+	camOffsetRegChannel chan chan mgl32.Vec2,
+	camScaleRegChannel chan chan float32) *Engine {
 	terrain.Init(config.Config.Terrain.Generation.Seed)
 
-	engine := Engine{
-		terrainMap:          terrain.NewTerrainMap(),
-		elementFinder:       element.NewElementFinder(),
-		powerGrid:           power.NewPowerGrid(),
-		roadGrid:            road.NewRoadGrid(),
-		infiniRoadGenerator: road.NewInfiniRoadGenerator(),
-		isMousePressed:      false,
-		actionPerformed:     false,
-		powerLineState:      NewPowerLineEditState(),
-		roadLineState:       NewRoadLineEditState(),
-		snapElements:        NewSnapElements(),
+	engine := Engine{}
 
-		Hypotheticals: NewHypotheticalActions()}
+	engine.terrainMap = terrain.NewTerrainMap(camOffsetRegChannel, camScaleRegChannel)
+	engine.elementFinder = element.NewElementFinder()
+	engine.powerGrid = power.NewPowerGrid()
+	engine.roadGrid = road.NewRoadGrid()
+	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(
+		engine.roadGrid,
+		engine.elementFinder,
+		engine.terrainMap.NewRegionRegChannel)
+	engine.isMousePressed = false
+	engine.actionPerformed = false
+	engine.powerLineState = NewPowerLineEditState()
+	engine.roadLineState = NewRoadLineEditState()
+	engine.snapElements = NewSnapElements()
+
+	engine.Hypotheticals = NewHypotheticalActions()
 	return &engine
 }
 
@@ -247,18 +255,6 @@ func (e *Engine) PrecacheRegions(regions []commonMath.IntVec2) {
 
 func (e *Engine) ComputeSnapNodes(engineState *editorEngine.State) {
 	e.snapElements.ComputeSnappedSnapElements(e.lastBoardPos, e.elementFinder, engineState)
-}
-
-// Data retrieval for drawing.
-func (e *Engine) GetRegionMap(region commonMath.IntVec2) *terrain.TerrainSubMap {
-	submap := e.terrainMap.GetOrAddRegion(region.X(), region.Y())
-
-	// Perform synchronous generation steps, as needed
-	if !e.infiniRoadGenerator.GeneratedRoad(region) {
-		e.infiniRoadGenerator.GenerateRoad(region, e.roadGrid, e.elementFinder)
-	}
-
-	return submap
 }
 
 func (e *Engine) GetTerrainMap() *terrain.TerrainMap {

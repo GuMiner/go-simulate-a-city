@@ -1,6 +1,7 @@
 package flat
 
 import (
+	"go-simulate-a-city/sim/core/gamegrid"
 	"go-simulate-a-city/sim/engine/terrain"
 	"go-simulate-a-city/sim/ui"
 
@@ -73,7 +74,7 @@ func (t *TerrainOverlayManager) drainInputChannels() {
 
 func (t *TerrainOverlayManager) Render() {
 	t.drainInputChannels()
-	visibleRegions := ComputeVisibleRegions(t.cameraOffset, t.cameraScale)
+	visibleRegions := gamegrid.ComputeVisibleRegions(t.cameraOffset, t.cameraScale)
 	for _, region := range visibleRegions {
 		overlay := t.GetOrAddTerrainOverlay(region.X(), region.Y())
 		overlay.UpdateCameraOffset(region.X(), region.Y(), t.cameraOffset, t.cameraScale)

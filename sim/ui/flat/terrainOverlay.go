@@ -2,6 +2,7 @@ package flat
 
 import (
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/core/gamegrid"
 	"go-simulate-a-city/sim/engine/terrain"
 	"go-simulate-a-city/sim/ui/overlay"
 
@@ -27,8 +28,8 @@ func (t *TerrainOverlay) GetOverlay() *overlay.Overlay {
 }
 
 func (t *TerrainOverlay) UpdateCameraOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) {
-	regionOffset := GetRegionOffset(x, y, offset, zoomFactor)
-	scale := GetRegionScale(zoomFactor)
+	regionOffset := gamegrid.GetRegionOffset(x, y, offset, zoomFactor)
+	scale := gamegrid.GetRegionScale(zoomFactor)
 
 	t.overlay.UpdateLocation(regionOffset, scale, 1.0)
 }

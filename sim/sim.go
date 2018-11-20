@@ -7,6 +7,7 @@ import (
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/engine"
 	"go-simulate-a-city/sim/engine/core"
+	"go-simulate-a-city/sim/engine/terrain"
 	"go-simulate-a-city/sim/input"
 	"go-simulate-a-city/sim/input/editorEngine"
 	"go-simulate-a-city/sim/ui"
@@ -83,13 +84,16 @@ func main() {
 
 	// Setup simulation
 
-	engine := engine.NewEngine()
+	engine := engine.NewEngine(camera.OffsetChangeRegChannel, camera.ScaleChangeRegChannel)
 
 	terrainOverlayManager := flat.NewTerrainOverlayManager(
 		camera.OffsetChangeRegChannel,
 		camera.ScaleChangeRegChannel,
 		engine.GetTerrainMap().NewTerrainRegChannel)
 	defer terrainOverlayManager.Delete()
+
+	// Precaching only does the outer borders. Ensure we start with a clean state.
+	engine.GetTerrainMap().ControlChannel <- terrain.FORCE_REFRESH
 
 	startTime := time.Now()
 	frameTime := float32(0.1)
@@ -115,13 +119,6 @@ func main() {
 		// To avoid blocking with what exists now, getting the region map runs on its own goroutine
 		// Load new terrain regions based on what is visible.
 		// engine.PrecacheRegions(camera.ComputePrecacheRegions())
-
-		visibleRegions := flat.ComputeVisibleRegions(camera.GetOffset(), camera.GetZoomFactor())
-		go func() {
-			for _, region := range visibleRegions {
-				engine.GetRegionMap(region)
-			}
-		}()
 
 		boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
 		if editorStateUpdated || true {                         // mouseMoved {
