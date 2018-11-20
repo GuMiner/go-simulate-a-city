@@ -92,7 +92,7 @@ func main() {
 		engine.GetTerrainMap().NewTerrainRegChannel)
 	defer terrainOverlayManager.Delete()
 
-	// Precaching only does the outer borders. Ensure we start with a clean state.
+	// Precaching only does the outer borders. Ensure we draw the center area.
 	engine.GetTerrainMap().ControlChannel <- terrain.FORCE_REFRESH
 
 	startTime := time.Now()
@@ -114,11 +114,6 @@ func main() {
 			// The edit state has updated, update as needed
 			ui.UpdateEditorState(editorEngine.EngineState, window)
 		}
-
-		// TODO -- this all should be event / message based.
-		// To avoid blocking with what exists now, getting the region map runs on its own goroutine
-		// Load new terrain regions based on what is visible.
-		// engine.PrecacheRegions(camera.ComputePrecacheRegions())
 
 		boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
 		if editorStateUpdated || true {                         // mouseMoved {
@@ -148,9 +143,6 @@ func main() {
 			paused = !paused
 		}
 
-		if !paused {
-			engine.StepSim(frameTime)
-		}
 		engine.StepEdit(frameTime, editorEngine.EngineState)
 	}
 

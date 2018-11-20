@@ -235,17 +235,6 @@ func (e *Engine) StepEdit(stepAmount float32, engineState editorEngine.State) {
 	}
 }
 
-// Steps the simulation
-func (e *Engine) StepSim(stepAmount float32) {
-	// if e.time.Update(stepAmount) {
-	// 	// End of day. Recompute financials and periodic data
-	// 	if !e.financials.Update() {
-	// 		fmt.Printf("No longer solvent! End of game.\n")
-	// 		panic("TODO: Design a menu system. Low priority as gameplay is more important ATM.")
-	// 	}
-	// }
-}
-
 // Update methods based on UI
 func (e *Engine) PrecacheRegions(regions []commonMath.IntVec2) {
 	for _, region := range regions {

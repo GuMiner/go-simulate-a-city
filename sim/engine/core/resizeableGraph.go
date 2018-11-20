@@ -22,11 +22,6 @@ func NewResizeableGraph() *ResizeableGraph {
 
 // These two methods implement graph operations as per https://github.com/yourbasic/graph/blob/master/mutable.go
 
-// Returns the number of vertices in the graph.
-func (g *ResizeableGraph) Order() int {
-	return g.vertexCount
-}
-
 // Calls the do function for each neighbor w of v,
 // with c equal to the cost of the edge from v to w.
 // If do returns true, Visit returns immediately,
@@ -121,25 +116,4 @@ func (g *ResizeableGraph) AddOrUpdateEdgeCost(v, w int, c int64) {
 func (g *ResizeableGraph) AddOrUpdateEdgeCostBoth(v, w int, c int64) {
 	g.AddOrUpdateEdgeCost(v, w, c)
 	g.AddOrUpdateEdgeCost(w, v, c)
-}
-
-// Delete removes an edge from v to w.
-
-func (g *ResizeableGraph) Delete(v, w int) {
-	if _, ok := g.edges[v]; ok {
-		delete(g.edges[v], w)
-	} else {
-		panic(fmt.Sprintf("Vertex '%v' does not exist (newNodeIndex: %v. node count: %v)!", v, g.newNodeIndex, g.vertexCount))
-	}
-}
-
-// DeleteBoth removes all edges between v and w.
-
-func (g *ResizeableGraph) DeleteBoth(v, w int) {
-	if v == w {
-		panic(fmt.Sprintf("We do not support deleting links to the same node. Node: %v (newNodeIndex: %v. node count: %v)!", w, g.newNodeIndex, g.vertexCount))
-	}
-
-	g.Delete(v, w)
-	g.Delete(w, v)
 }
