@@ -34,16 +34,21 @@ func ComputeVisibleRegions(offset mgl32.Vec2, scale float32) []commonMath.IntVec
 func ComputePrecacheRegions(offset mgl32.Vec2, scale float32) []commonMath.IntVec2 {
 	minTile, maxTile := getMinMaxVisibleRange(offset, scale)
 
+	xMin := int(minTile.X() - 2.0)
+	xMax := int(maxTile.X() + 2.0)
+	yMin := int(minTile.Y() - 2.0)
+	yMax := int(maxTile.Y() + 2.0)
+
 	visibleTiles := make([]commonMath.IntVec2, 0)
-	for i := int(minTile.X() - 2.0); i <= int(maxTile.X()+2.0); i++ {
-		for j := int(minTile.Y() - 2.0); j <= int(maxTile.Y()+2.0); j++ {
-			if i == int(minTile.X()-2.0) ||
-				i == int(minTile.X()+2.0) ||
-				j == int(minTile.Y()-2.0) ||
-				j == int(maxTile.Y()+2.0) {
-				visibleTiles = append(visibleTiles, commonMath.IntVec2{i, j})
-			}
-		}
+	for i := xMin; i <= xMax; i++ {
+		visibleTiles = append(visibleTiles, commonMath.IntVec2{i, yMin})
+		visibleTiles = append(visibleTiles, commonMath.IntVec2{i, yMax})
+	}
+
+	// Offset by 1 to avoid double-adding corners
+	for j := yMin + 1; j <= yMax-1; j++ {
+		visibleTiles = append(visibleTiles, commonMath.IntVec2{xMin, j})
+		visibleTiles = append(visibleTiles, commonMath.IntVec2{xMax, j})
 	}
 
 	return visibleTiles
