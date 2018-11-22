@@ -65,8 +65,8 @@ func (e *Engine) addPowerPlantIfValid() {
 	if !intesectsWithElement {
 		isGroundValid := e.terrainMap.ValidateGroundLocation(e.Hypotheticals.Regions[0].Region)
 		if isGroundValid {
-			plantType := power.GetPlantType(editorEngine.EngineState.ItemSubSelection)
-			plantSize := power.Small // TODO: Configurable
+			plantType := power.GetPlantType(editorEngine.Item1) // TODO: EngineState.ItemSubSelection)
+			plantSize := power.Small                            // TODO: Configurable
 
 			element := e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
 			e.elementFinder.Add(element)

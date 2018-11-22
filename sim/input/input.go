@@ -5,9 +5,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-var keyEvent bool = false
-var typedKeys map[glfw.Key]bool = make(map[glfw.Key]bool)
-
 var MousePressEvent bool = false
 var MouseReleaseEvent bool = false
 var PressedButtons map[glfw.MouseButton]bool = make(map[glfw.MouseButton]bool)
@@ -23,11 +20,9 @@ func HandleMouseScroll(window *glfw.Window, xOffset, yOffset float64) {
 func HandleMouseButton(window *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 	switch action {
 	case glfw.Press:
-		PressedButtons[button] = true
-		MousePressEvent = true
+		InputBuffer.MousePressedChannel <- button
 	case glfw.Release:
-		PressedButtons[button] = false
-		MouseReleaseEvent = true
+		InputBuffer.MouseReleasedChannel <- button
 	}
 }
 
@@ -35,7 +30,6 @@ func HandleKeyInput(window *glfw.Window, key glfw.Key, scancode int, action glfw
 	switch action {
 	case glfw.Press:
 		InputBuffer.PressedKeysChannel <- key
-		typedKeys[key] = true
 	case glfw.Release:
 		InputBuffer.ReleasedKeysChannel <- key
 	}

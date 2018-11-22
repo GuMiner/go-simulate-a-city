@@ -12,18 +12,25 @@ var InputBuffer *InputBufferAgent
 type InputBufferAgent struct {
 	ControlChannel chan int
 
-	mouseMoveRegistrations   []chan mgl32.Vec2
-	mouseScrollRegistrations []chan float32
-	keyPressedRegistrations  []chan glfw.Key
-	keyReleasedRegistrations []chan glfw.Key
-	MouseMoveChannel         chan mgl32.Vec2
-	MouseMoveRegChannel      chan chan mgl32.Vec2
-	MouseScrollChannel       chan float32
-	MouseScrollRegChannel    chan chan float32
-	PressedKeysChannel       chan glfw.Key
-	ReleasedKeysChannel      chan glfw.Key
-	PressedKeysRegChannel    chan chan glfw.Key
-	ReleasedKeysRegChannel   chan chan glfw.Key
+	mouseMoveRegistrations     []chan mgl32.Vec2
+	mousePressedRegistrations  []chan glfw.MouseButton
+	mouseReleasedRegistrations []chan glfw.MouseButton
+	mouseScrollRegistrations   []chan float32
+	keyPressedRegistrations    []chan glfw.Key
+	keyReleasedRegistrations   []chan glfw.Key
+
+	MouseMoveChannel        chan mgl32.Vec2
+	MouseMoveRegChannel     chan chan mgl32.Vec2
+	MousePressedChannel     chan glfw.MouseButton
+	MousePressedRegChannel  chan chan glfw.MouseButton
+	MouseReleasedChannel    chan glfw.MouseButton
+	MouseReleasedRegChannel chan chan glfw.MouseButton
+	MouseScrollChannel      chan float32
+	MouseScrollRegChannel   chan chan float32
+	PressedKeysChannel      chan glfw.Key
+	ReleasedKeysChannel     chan glfw.Key
+	PressedKeysRegChannel   chan chan glfw.Key
+	ReleasedKeysRegChannel  chan chan glfw.Key
 }
 
 func SetupInputBufferAgent() {
@@ -35,6 +42,8 @@ func SetupInputBufferAgent() {
 		keyReleasedRegistrations: make([]chan glfw.Key, 0),
 		MouseMoveChannel:         make(chan mgl32.Vec2, 30),
 		MouseMoveRegChannel:      make(chan chan mgl32.Vec2),
+		MousePressedChannel:      make(chan glfw.MouseButton, 3),
+		MouseReleasedChannel:     make(chan glfw.MouseButton, 3),
 		MouseScrollChannel:       make(chan float32, 30),
 		MouseScrollRegChannel:    make(chan chan float32),
 		PressedKeysChannel:       make(chan glfw.Key, 50),
@@ -72,6 +81,22 @@ func (i *InputBufferAgent) run() {
 			break
 		case reg := <-i.MouseMoveRegChannel:
 			i.mouseMoveRegistrations = append(i.mouseMoveRegistrations, reg)
+			break
+		case input := <-i.MousePressedChannel:
+			for _, agent := range i.mousePressedRegistrations {
+				agent <- input
+			}
+			break
+		case reg := <-i.MousePressedRegChannel:
+			i.mousePressedRegistrations = append(i.mousePressedRegistrations, reg)
+			break
+		case input := <-i.MouseReleasedChannel:
+			for _, agent := range i.mouseReleasedRegistrations {
+				agent <- input
+			}
+			break
+		case reg := <-i.MouseReleasedRegChannel:
+			i.mouseReleasedRegistrations = append(i.mouseReleasedRegistrations, reg)
 			break
 		case input := <-i.MouseScrollChannel:
 			for _, agent := range i.mouseScrollRegistrations {

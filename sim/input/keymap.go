@@ -90,16 +90,3 @@ func CreateDefaultKeyMap() {
 func GetKeyCode(key KeyAssignment) glfw.Key {
 	return keyMap[key]
 }
-
-func IsPressed(key KeyAssignment) bool {
-	return false
-}
-
-func IsTyped(key KeyAssignment) bool {
-	isTyped := typedKeys[keyMap[key]]
-	if isTyped {
-		typedKeys[keyMap[key]] = false
-	}
-
-	return isTyped
-}

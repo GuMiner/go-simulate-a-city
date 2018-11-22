@@ -16,7 +16,6 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
-	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -69,10 +68,15 @@ func main() {
 		commonConfig.Config.ColorGradient.Saturation,
 		commonConfig.Config.ColorGradient.Luminosity)
 
-	ui.Init(window)
-	defer ui.Delete()
+	editorEngine := editorEngine.NewEditorEngine(input.InputBuffer.PressedKeysRegChannel)
 
-	editorEngine.Init()
+	ui.Init(window)
+	customCursors := ui.NewCustomCursors(
+		editorEngine.EngineModeRegChannel,
+		editorEngine.EngineAddModeRegChannel,
+		editorEngine.EngineDrawModeRegChannel)
+	defer customCursors.Delete()
+	defer ui.Delete()
 
 	core.Init()
 	camera := flat.NewCamera(
@@ -83,7 +87,6 @@ func main() {
 		core.CoreTimer.HighResRegChannel)
 
 	// Setup simulation
-
 	engine := engine.NewEngine(camera.OffsetChangeRegChannel, camera.ScaleChangeRegChannel)
 
 	terrainOverlayManager := flat.NewTerrainOverlayManager(
@@ -95,55 +98,49 @@ func main() {
 	// Precaching only does the outer borders. Ensure we draw the center area.
 	engine.GetTerrainMap().ControlChannel <- terrain.FORCE_REFRESH
 
-	startTime := time.Now()
-	frameTime := float32(0.1)
-	lastElapsed := float32(0.0)
-	elapsed := lastElapsed
-
-	paused := false
+	// paused := false
 	update := func() {
-		lastElapsed = elapsed
-		elapsed = float32(time.Since(startTime)) / float32(time.Second)
-		frameTime = elapsed - lastElapsed
 
 		// Must be first.
 		glfw.PollEvents()
 
-		editorStateUpdated, editorSubStateUpdated := editorEngine.Update()
-		if editorStateUpdated || editorSubStateUpdated {
-			// The edit state has updated, update as needed
-			ui.UpdateEditorState(editorEngine.EngineState, window)
-		}
+		customCursors.Update(window)
 
-		boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
-		if editorStateUpdated || true {                         // mouseMoved {
-			engine.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
-			engine.ComputeSnapNodes(&editorEngine.EngineState)
-		}
+		// editorStateUpdated, editorSubStateUpdated := editorEngine.Update()
+		// if editorStateUpdated || editorSubStateUpdated {
+		// 	// The edit state has updated, update as needed
+		// 	ui.UpdateEditorState(editorEngine.EngineState, window)
+		// }
+		//
+		// boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
+		// if editorStateUpdated || true {                         // mouseMoved {
+		// 	engine.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
+		// 	engine.ComputeSnapNodes(&editorEngine.EngineState)
+		// }
 
-		if input.MousePressEvent {
-			engine.MousePress(boardPos, editorEngine.EngineState)
-			input.MousePressEvent = false
-		}
+		// if input.MousePressEvent {
+		// 	engine.MousePress(boardPos, editorEngine.EngineState)
+		// 	input.MousePressEvent = false
+		// }
+		//
+		// if input.MouseReleaseEvent {
+		// 	engine.MouseRelease(boardPos, editorEngine.EngineState)
+		// 	input.MouseReleaseEvent = false
+		// }
+		//
+		// if true { // mouseMoved {
+		// 	engine.MouseMoved(boardPos, editorEngine.EngineState)
+		// }
+		//
+		// if input.IsTyped(input.CancelKey) {
+		// 	engine.CancelState(editorEngine.EngineState)
+		// }
+		//
+		// if input.IsTyped(input.PauseKey) {
+		// 	paused = !paused
+		// }
 
-		if input.MouseReleaseEvent {
-			engine.MouseRelease(boardPos, editorEngine.EngineState)
-			input.MouseReleaseEvent = false
-		}
-
-		if true { // mouseMoved {
-			engine.MouseMoved(boardPos, editorEngine.EngineState)
-		}
-
-		if input.IsTyped(input.CancelKey) {
-			engine.CancelState(editorEngine.EngineState)
-		}
-
-		if input.IsTyped(input.PauseKey) {
-			paused = !paused
-		}
-
-		engine.StepEdit(frameTime, editorEngine.EngineState)
+		// engine.StepEdit(frameTime, editorEngine.EngineState)
 	}
 
 	render := func() {

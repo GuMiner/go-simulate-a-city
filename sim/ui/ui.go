@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"go-simulate-a-city/sim/input/editorEngine"
 	"go-simulate-a-city/sim/ui/lines"
 	"go-simulate-a-city/sim/ui/overlay"
 	"go-simulate-a-city/sim/ui/region"
@@ -22,33 +21,9 @@ func Init(window *glfw.Window) {
 	Ui.OverlayProgram = overlay.NewOverlayShaderProgram()
 	Ui.RegionProgram = region.NewRegionShaderProgram()
 	Ui.LinesProgram = lines.NewLinesShaderProgram()
-
-	initCustomCursors(window)
-}
-
-func UpdateEditorState(engineState editorEngine.State, window *glfw.Window) {
-	cursor := Selection
-
-	if engineState.Mode == editorEngine.Select {
-		cursor = Selection
-	} else if engineState.Mode == editorEngine.Add {
-		if engineState.InAddMode == editorEngine.PowerLine {
-			cursor = PowerLineAdd
-		} else if engineState.InAddMode == editorEngine.PowerPlant {
-			cursor = PowerPlantAdd
-		} else if engineState.InAddMode == editorEngine.RoadLine {
-			cursor = RoadLineAdd
-		}
-	} else { // Draw Mode
-		cursor = drawModeCursors[engineState.InDrawMode]
-	}
-
-	setCursor(cursor, window)
 }
 
 func Delete() {
 	Ui.OverlayProgram.Delete()
 	Ui.RegionProgram.Delete()
-
-	destroyCustomCursors()
 }
