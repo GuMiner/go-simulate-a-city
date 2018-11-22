@@ -2,7 +2,7 @@ package power
 
 import (
 	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/input/editorEngine"
+	"go-simulate-a-city/sim/core/dto/editorengdto"
 )
 
 type PowerPlantSize int
@@ -27,7 +27,7 @@ func GetPowerOutputAndSize(plantType string, plantSize PowerPlantSize) (output i
 	return output, size
 }
 
-func GetPlantType(itemSelection editorEngine.ItemSubSelection) string {
+func GetPlantType(itemSelection editorengdto.ItemSubSelection) string {
 	return config.Config.Power.IdToNameMap[int(itemSelection)]
 }
 

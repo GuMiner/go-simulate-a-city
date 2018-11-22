@@ -2,7 +2,8 @@ package ui
 
 import (
 	"go-simulate-a-city/common/commonio"
-	"go-simulate-a-city/sim/input/editorEngine"
+	"go-simulate-a-city/sim/core/dto/editorengdto"
+	"go-simulate-a-city/sim/core/mailroom"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -25,12 +26,12 @@ const (
 
 type CustomCursors struct {
 	cursors         map[CustomCursorType]*glfw.Cursor
-	drawModeCursors map[editorEngine.EditorDrawMode]CustomCursorType
-	addModeCursors  map[editorEngine.EditorAddMode]CustomCursorType
+	drawModeCursors map[editorengdto.EditorDrawMode]CustomCursorType
+	addModeCursors  map[editorengdto.EditorAddMode]CustomCursorType
 
-	globalEditEngineChan chan editorEngine.EditorMode
-	addModeEngineChan    chan editorEngine.EditorAddMode
-	drawModeEngineChan   chan editorEngine.EditorDrawMode
+	globalEditEngineChan chan editorengdto.EditorMode
+	addModeEngineChan    chan editorengdto.EditorAddMode
+	drawModeEngineChan   chan editorengdto.EditorDrawMode
 	ControlChannel       chan int
 
 	// Cursor updates can only be applied on the main thread
@@ -38,27 +39,24 @@ type CustomCursors struct {
 	currentCursor CustomCursorType
 }
 
-func NewCustomCursors(
-	globalEditEngineRegChan chan chan editorEngine.EditorMode,
-	addModeEngineRegChan chan chan editorEngine.EditorAddMode,
-	drawModeEngineRegChan chan chan editorEngine.EditorDrawMode) *CustomCursors {
+func NewCustomCursors() *CustomCursors {
 
 	cursors := CustomCursors{
 		cursors:              make(map[CustomCursorType]*glfw.Cursor),
-		drawModeCursors:      make(map[editorEngine.EditorDrawMode]CustomCursorType),
-		addModeCursors:       make(map[editorEngine.EditorAddMode]CustomCursorType),
-		globalEditEngineChan: make(chan editorEngine.EditorMode, 2),
-		addModeEngineChan:    make(chan editorEngine.EditorAddMode, 2),
-		drawModeEngineChan:   make(chan editorEngine.EditorDrawMode, 2),
+		drawModeCursors:      make(map[editorengdto.EditorDrawMode]CustomCursorType),
+		addModeCursors:       make(map[editorengdto.EditorAddMode]CustomCursorType),
+		globalEditEngineChan: make(chan editorengdto.EditorMode, 2),
+		addModeEngineChan:    make(chan editorengdto.EditorAddMode, 2),
+		drawModeEngineChan:   make(chan editorengdto.EditorDrawMode, 2),
 		ControlChannel:       make(chan int),
 		cursorUpdate:         true,
 		currentCursor:        Selection}
 
 	cursors.loadCursors()
 
-	globalEditEngineRegChan <- cursors.globalEditEngineChan
-	addModeEngineRegChan <- cursors.addModeEngineChan
-	drawModeEngineRegChan <- cursors.drawModeEngineChan
+	mailroom.EngineModeRegChannel <- cursors.globalEditEngineChan
+	mailroom.EngineAddModeRegChannel <- cursors.addModeEngineChan
+	mailroom.EngineDrawModeRegChannel <- cursors.drawModeEngineChan
 
 	go cursors.run()
 
@@ -69,7 +67,7 @@ func (c *CustomCursors) run() {
 	for {
 		select {
 		case newMode := <-c.globalEditEngineChan:
-			if newMode == editorEngine.Select {
+			if newMode == editorengdto.Select {
 				c.currentCursor = Selection
 				c.cursorUpdate = true
 			}
@@ -114,15 +112,15 @@ func (c *CustomCursors) loadCursors() {
 	}
 
 	// Assign the maps to simplify routing logic
-	c.addModeCursors[editorEngine.PowerLine] = PowerLineAdd
-	c.addModeCursors[editorEngine.PowerPlant] = PowerPlantAdd
-	c.addModeCursors[editorEngine.RoadLine] = RoadLineAdd
-	c.drawModeCursors[editorEngine.TerrainFlatten] = TerrainFlatten
-	c.drawModeCursors[editorEngine.TerrainSharpen] = TerrainSharpen
-	c.drawModeCursors[editorEngine.TerrainTrees] = TerrainTrees
-	c.drawModeCursors[editorEngine.TerrainShrubs] = TerrainShrubs
-	c.drawModeCursors[editorEngine.TerrainHills] = TerrainHills
-	c.drawModeCursors[editorEngine.TerrainValleys] = TerrainValleys
+	c.addModeCursors[editorengdto.PowerLine] = PowerLineAdd
+	c.addModeCursors[editorengdto.PowerPlant] = PowerPlantAdd
+	c.addModeCursors[editorengdto.RoadLine] = RoadLineAdd
+	c.drawModeCursors[editorengdto.TerrainFlatten] = TerrainFlatten
+	c.drawModeCursors[editorengdto.TerrainSharpen] = TerrainSharpen
+	c.drawModeCursors[editorengdto.TerrainTrees] = TerrainTrees
+	c.drawModeCursors[editorengdto.TerrainShrubs] = TerrainShrubs
+	c.drawModeCursors[editorengdto.TerrainHills] = TerrainHills
+	c.drawModeCursors[editorengdto.TerrainValleys] = TerrainValleys
 }
 
 func (c *CustomCursors) Update(window *glfw.Window) {

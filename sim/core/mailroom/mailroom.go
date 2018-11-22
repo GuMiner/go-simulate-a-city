@@ -2,6 +2,7 @@ package mailroom
 
 import (
 	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/dto/terraindto"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -17,3 +18,8 @@ var BoardPosChangeRegChannel chan chan mgl32.Vec2
 // Terrain
 var NewTerrainRegChannel chan chan *terraindto.TerrainUpdate
 var NewRegionRegChannel chan chan commonMath.IntVec2
+
+// Editor engine
+var EngineModeRegChannel chan chan editorengdto.EditorMode
+var EngineAddModeRegChannel chan chan editorengdto.EditorAddMode
+var EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode

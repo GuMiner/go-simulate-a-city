@@ -69,12 +69,12 @@ func main() {
 		commonConfig.Config.ColorGradient.Luminosity)
 
 	editorEngine := editorEngine.NewEditorEngine(input.InputBuffer.PressedKeysRegChannel)
+	mailroom.EngineModeRegChannel = editorEngine.EngineModeRegChannel
+	mailroom.EngineAddModeRegChannel = editorEngine.EngineAddModeRegChannel
+	mailroom.EngineDrawModeRegChannel = editorEngine.EngineDrawModeRegChannel
 
 	ui.Init(window)
-	customCursors := ui.NewCustomCursors(
-		editorEngine.EngineModeRegChannel,
-		editorEngine.EngineAddModeRegChannel,
-		editorEngine.EngineDrawModeRegChannel)
+	customCursors := ui.NewCustomCursors()
 	defer customCursors.Delete()
 	defer ui.Delete()
 

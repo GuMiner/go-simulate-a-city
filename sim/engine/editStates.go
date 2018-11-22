@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/input/editorEngine"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -36,11 +37,11 @@ func NewRoadLineEditState() *RoadLineEditState {
 }
 
 func (p *PowerLineEditState) InPowerLineState(engineState *editorEngine.State) bool {
-	return engineState.Mode == editorEngine.Add && engineState.InAddMode == editorEngine.PowerLine
+	return engineState.Mode == editorengdto.Add && engineState.InAddMode == editorengdto.PowerLine
 }
 
 func (p *RoadLineEditState) InRoadLineState(engineState *editorEngine.State) bool {
-	return engineState.Mode == editorEngine.Add && engineState.InAddMode == editorEngine.RoadLine
+	return engineState.Mode == editorengdto.Add && engineState.InAddMode == editorengdto.RoadLine
 }
 
 func (p *PowerLineEditState) EnterOrExitEditMode(engineState *editorEngine.State) {

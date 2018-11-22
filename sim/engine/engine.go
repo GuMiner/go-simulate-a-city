@@ -3,6 +3,7 @@ package engine
 import (
 	"fmt"
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core"
 	"go-simulate-a-city/sim/engine/core/dto"
@@ -29,9 +30,9 @@ type Engine struct {
 	roadLineState   *RoadLineEditState
 	snapElements    SnapElements
 
-	editorMode     editorEngine.EditorMode
-	editorAddMode  editorEngine.EditorAddMode
-	editorDrawMode editorEngine.EditorDrawMode
+	editorMode     editorengdto.EditorMode
+	editorAddMode  editorengdto.EditorAddMode
+	editorDrawMode editorengdto.EditorDrawMode
 
 	Hypotheticals HypotheticalActions
 
@@ -43,9 +44,9 @@ func NewEngine() *Engine {
 	terrain.Init(config.Config.Terrain.Generation.Seed)
 
 	engine := Engine{
-		editorMode:           editorEngine.Select,
-		editorAddMode:        editorEngine.PowerPlant,
-		editorDrawMode:       editorEngine.TerrainFlatten,
+		editorMode:           editorengdto.Select,
+		editorAddMode:        editorengdto.PowerPlant,
+		editorDrawMode:       editorengdto.TerrainFlatten,
 		mouseBoardPosChannel: make(chan mgl32.Vec2, 3),
 		ControlChannel:       make(chan int)}
 
@@ -89,7 +90,7 @@ func (e *Engine) addPowerPlantIfValid() {
 	if !intesectsWithElement {
 		isGroundValid := e.terrainMap.ValidateGroundLocation(e.Hypotheticals.Regions[0].Region)
 		if isGroundValid {
-			plantType := power.GetPlantType(editorEngine.Item1) // TODO: EngineState.ItemSubSelection)
+			plantType := power.GetPlantType(editorengdto.Item1) // TODO: EngineState.ItemSubSelection)
 			plantSize := power.Small                            // TODO: Configurable
 
 			element := e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
@@ -196,7 +197,7 @@ func (e *Engine) MousePress(pos mgl32.Vec2, engineState editorEngine.State) {
 	e.isMousePressed = true
 	e.lastBoardPos = pos
 	if !e.actionPerformed {
-		if engineState.Mode == editorEngine.Add && engineState.InAddMode == editorEngine.PowerPlant {
+		if engineState.Mode == editorengdto.Add && engineState.InAddMode == editorengdto.PowerPlant {
 			e.addPowerPlantIfValid()
 		}
 	}
@@ -232,13 +233,13 @@ func (e *Engine) applyStepDraw(stepAmount float32, engineState *editorEngine.Sta
 	stepFactor := 0.1 * stepAmount
 
 	switch engineState.InDrawMode {
-	case editorEngine.TerrainFlatten:
+	case editorengdto.TerrainFlatten:
 		e.terrainMap.Flatten(region, stepFactor)
-	case editorEngine.TerrainSharpen:
+	case editorengdto.TerrainSharpen:
 		e.terrainMap.Sharpen(region, stepFactor)
-	case editorEngine.TerrainHills:
+	case editorengdto.TerrainHills:
 		e.terrainMap.Hills(region, stepFactor)
-	case editorEngine.TerrainValleys:
+	case editorengdto.TerrainValleys:
 		e.terrainMap.Valleys(region, stepFactor)
 	default:
 		break
@@ -247,7 +248,7 @@ func (e *Engine) applyStepDraw(stepAmount float32, engineState *editorEngine.Sta
 
 // Performs operations that are performed as steps with time for edit
 func (e *Engine) StepEdit(stepAmount float32, engineState editorEngine.State) {
-	if engineState.Mode == editorEngine.Draw && e.isMousePressed {
+	if engineState.Mode == editorengdto.Draw && e.isMousePressed {
 		e.applyStepDraw(stepAmount, &engineState)
 	}
 }

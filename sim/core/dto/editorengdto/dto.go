@@ -1,4 +1,4 @@
-package editorEngine
+package editorengdto
 
 type EditorMode int
 
@@ -37,14 +37,3 @@ const (
 	TerrainHills
 	TerrainValleys
 )
-
-type State struct {
-	Mode             EditorMode
-	InAddMode        EditorAddMode
-	InDrawMode       EditorDrawMode
-	ItemSubSelection ItemSubSelection
-
-	SnapToGrid     bool
-	SnapToElements bool
-	SnapToAngle    bool
-}

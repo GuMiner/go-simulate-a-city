@@ -3,6 +3,7 @@ package engine
 import (
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/engine/element"
 	"go-simulate-a-city/sim/engine/road"
 	"go-simulate-a-city/sim/input/editorEngine"
@@ -25,16 +26,16 @@ func NewSnapElements() SnapElements {
 func (s *SnapElements) ComputeSnappedSnapElements(boardPos mgl32.Vec2, elementFinder *element.ElementFinder, engineState *editorEngine.State) {
 	s.snappedNode = nil
 	if engineState.SnapToElements &&
-		engineState.Mode == editorEngine.Add &&
-		engineState.InAddMode == editorEngine.PowerLine || engineState.InAddMode == editorEngine.RoadLine {
+		engineState.Mode == editorengdto.Add &&
+		engineState.InAddMode == editorengdto.PowerLine || engineState.InAddMode == editorengdto.RoadLine {
 
 		elements := elementFinder.KNearest(boardPos, config.Config.Draw.SnapNodeCount)
 		for _, elem := range elements {
 			if elem.Distance < config.Config.Draw.MinSnapNodeDistance {
 				// TODO: This logic isn't sufficiently generic. It is enough to avoid snapping powerlines to roads and vice versa, but not sufficient for future extensibility.
 				_, isRoadLine := elem.Element.(*road.RoadLine)
-				if (isRoadLine && engineState.InAddMode == editorEngine.RoadLine) ||
-					(!isRoadLine && engineState.InAddMode != editorEngine.RoadLine) {
+				if (isRoadLine && engineState.InAddMode == editorengdto.RoadLine) ||
+					(!isRoadLine && engineState.InAddMode != editorengdto.RoadLine) {
 					s.snappedNode = &elem
 					break
 				}

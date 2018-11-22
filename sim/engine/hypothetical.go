@@ -2,6 +2,7 @@ package engine
 
 import (
 	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/engine/power"
 	"go-simulate-a-city/sim/input/editorEngine"
 
@@ -41,7 +42,7 @@ func (h *HypotheticalActions) setSingleRegion(region HypotheticalRegion) {
 }
 
 func (e *HypotheticalActions) computePowerPlantHypotheticalRegion(n *Engine) {
-	plantType := power.GetPlantType(editorEngine.Item1) // editorEngine.EngineState.ItemSubSelection)
+	plantType := power.GetPlantType(editorengdto.Item1) // editorEngine.EngineState.ItemSubSelection)
 	plantSize := power.Small                            // TODO: Configurable
 
 	// Ensure we only put power plants on valid ground.
@@ -120,15 +121,15 @@ func (e *HypotheticalActions) computeDrawIndicator(n *Engine) {
 
 // Updates the hypotheticals to be applicable to the current edit mode.
 func (e *HypotheticalActions) ComputeHypotheticalRegion(n *Engine, engineState *editorEngine.State) {
-	if engineState.Mode == editorEngine.Add {
-		if engineState.InAddMode == editorEngine.PowerPlant {
+	if engineState.Mode == editorengdto.Add {
+		if engineState.InAddMode == editorengdto.PowerPlant {
 			e.computePowerPlantHypotheticalRegion(n)
-		} else if engineState.InAddMode == editorEngine.PowerLine {
+		} else if engineState.InAddMode == editorengdto.PowerLine {
 			e.computePowerLineHypotheticalRegion(n)
-		} else if engineState.InAddMode == editorEngine.RoadLine {
+		} else if engineState.InAddMode == editorengdto.RoadLine {
 			e.computeRoadLineHypotheticalRegion(n)
 		}
-	} else if engineState.Mode == editorEngine.Draw {
+	} else if engineState.Mode == editorengdto.Draw {
 		e.computeDrawIndicator(n)
 	} else {
 		e.Reset()
