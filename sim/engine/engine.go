@@ -2,8 +2,8 @@ package engine
 
 import (
 	"fmt"
-	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core"
 	"go-simulate-a-city/sim/engine/core/dto"
 	"go-simulate-a-city/sim/engine/element"
@@ -29,19 +29,27 @@ type Engine struct {
 	roadLineState   *RoadLineEditState
 	snapElements    SnapElements
 
+	editorMode     editorEngine.EditorMode
+	editorAddMode  editorEngine.EditorAddMode
+	editorDrawMode editorEngine.EditorDrawMode
+
 	Hypotheticals HypotheticalActions
+
+	mouseBoardPosChannel chan mgl32.Vec2
+	ControlChannel       chan int
 }
 
-// TODO: This should not take in these parameters. These should be populated in the
-// well-known listings of channels
-func NewEngine(
-	camOffsetRegChannel chan chan mgl32.Vec2,
-	camScaleRegChannel chan chan float32) *Engine {
+func NewEngine() *Engine {
 	terrain.Init(config.Config.Terrain.Generation.Seed)
 
-	engine := Engine{}
+	engine := Engine{
+		editorMode:           editorEngine.Select,
+		editorAddMode:        editorEngine.PowerPlant,
+		editorDrawMode:       editorEngine.TerrainFlatten,
+		mouseBoardPosChannel: make(chan mgl32.Vec2, 3),
+		ControlChannel:       make(chan int)}
 
-	engine.terrainMap = terrain.NewTerrainMap(camOffsetRegChannel, camScaleRegChannel)
+	engine.terrainMap = terrain.NewTerrainMap()
 	engine.elementFinder = element.NewElementFinder()
 	engine.powerGrid = power.NewPowerGrid()
 	engine.roadGrid = road.NewRoadGrid()
@@ -56,7 +64,23 @@ func NewEngine(
 	engine.snapElements = NewSnapElements()
 
 	engine.Hypotheticals = NewHypotheticalActions()
+
+	mailroom.BoardPosChangeRegChannel <- engine.mouseBoardPosChannel
+	mailroom.NewTerrainRegChannel = engine.terrainMap.NewTerrainRegChannel
+	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
+
+	go engine.run()
 	return &engine
+}
+
+func (e *Engine) run() {
+	for {
+		select {
+		case e.lastBoardPos = <-e.mouseBoardPosChannel:
+		case _ = <-e.ControlChannel:
+			return
+		}
+	}
 }
 
 func (e *Engine) addPowerPlantIfValid() {
@@ -178,13 +202,6 @@ func (e *Engine) MousePress(pos mgl32.Vec2, engineState editorEngine.State) {
 	}
 }
 
-func (e *Engine) MouseMoved(pos mgl32.Vec2, engineState editorEngine.State) {
-	e.lastBoardPos = pos
-
-	e.powerLineState.EnterOrExitEditMode(&engineState)
-	e.roadLineState.EnterOrExitEditMode(&engineState)
-}
-
 func (e *Engine) MouseRelease(pos mgl32.Vec2, engineState editorEngine.State) {
 	e.isMousePressed = false
 	e.actionPerformed = false
@@ -235,19 +252,8 @@ func (e *Engine) StepEdit(stepAmount float32, engineState editorEngine.State) {
 	}
 }
 
-// Update methods based on UI
-func (e *Engine) PrecacheRegions(regions []commonMath.IntVec2) {
-	for _, region := range regions {
-		e.terrainMap.GetOrAddRegion(region.X(), region.Y())
-	}
-}
-
 func (e *Engine) ComputeSnapNodes(engineState *editorEngine.State) {
 	e.snapElements.ComputeSnappedSnapElements(e.lastBoardPos, e.elementFinder, engineState)
-}
-
-func (e *Engine) GetTerrainMap() *terrain.TerrainMap {
-	return e.terrainMap
 }
 
 func (e *Engine) GetPowerGrid() *power.PowerGrid {

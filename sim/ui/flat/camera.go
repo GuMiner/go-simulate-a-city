@@ -34,10 +34,11 @@ type Camera struct {
 	scaleChangeRegs       []chan float32
 	ScaleChangeRegChannel chan chan float32
 
+	boardPosRegs       []chan mgl32.Vec2
+	BoardPosRegChannel chan chan mgl32.Vec2
+
 	zoomFactor float32
 	offset     mgl32.Vec2
-
-	mouseBoardPos mgl32.Vec2
 
 	lastUpdateTicks uint
 	keyMotionAmount float32
@@ -63,7 +64,9 @@ func NewCamera(
 		offsetChangeRegs:       make([]chan mgl32.Vec2, 0),
 		OffsetChangeRegChannel: make(chan chan mgl32.Vec2),
 		scaleChangeRegs:        make([]chan float32, 0),
-		ScaleChangeRegChannel:  make(chan chan float32)}
+		ScaleChangeRegChannel:  make(chan chan float32),
+		boardPosRegs:           make([]chan mgl32.Vec2, 0),
+		BoardPosRegChannel:     make(chan chan mgl32.Vec2)}
 
 	mouseMoveRegChannel <- camera.mouseMoves
 	mouseScrollRegChannel <- camera.mouseScrolls
@@ -128,24 +131,24 @@ func (c *Camera) handleTickMotion(interval float32) {
 func (c *Camera) run() {
 	for {
 		select {
+		case reg := <-c.BoardPosRegChannel:
+			c.boardPosRegs = append(c.boardPosRegs, reg)
 		case reg := <-c.OffsetChangeRegChannel:
 			c.offsetChangeRegs = append(c.offsetChangeRegs, reg)
-			break
 		case reg := <-c.ScaleChangeRegChannel:
 			c.scaleChangeRegs = append(c.scaleChangeRegs, reg)
-			break
 		case mousePos := <-c.mouseMoves:
-			c.mouseBoardPos = c.MapPixelPosToBoard(mousePos)
-			break
+			boardPos := c.MapPixelPosToBoard(mousePos)
+			for _, reg := range c.boardPosRegs {
+				reg <- boardPos
+			}
 		case scrollAmount := <-c.mouseScrolls:
 			c.zoomFactor *= (1.0 + scrollAmount*config.Config.Ui.Camera.MouseScrollFactor)
 			for _, reg := range c.scaleChangeRegs {
 				reg <- c.zoomFactor
 			}
-			break
 		case keyCode := <-c.keyPresses:
 			parseKeyCode(keyCode, true)
-			break
 		case keyCode := <-c.keyReleases:
 			parseKeyCode(keyCode, false)
 		case time := <-c.highResTicks:
@@ -157,7 +160,6 @@ func (c *Camera) run() {
 			}
 
 			lastTimeTick = time
-			break
 		case _ = <-c.ControlChannel:
 			return
 		}

@@ -1,10 +1,12 @@
-package terrain
+package terraindto
 
 import (
 	"fmt"
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
 )
+
+type GenerationFunc func(int, int, int, int) []float32
 
 type TerrainTexel struct {
 	TerrainType TerrainType
@@ -25,7 +27,7 @@ type TerrainSubMap struct {
 	Texels [][]TerrainTexel
 }
 
-func NewTerrainSubMap(x, y int) *TerrainSubMap {
+func NewTerrainSubMap(x, y int, generationFunction GenerationFunc) *TerrainSubMap {
 	regionSize := config.Config.Terrain.RegionSize
 
 	terrainSubMap := TerrainSubMap{
@@ -35,14 +37,14 @@ func NewTerrainSubMap(x, y int) *TerrainSubMap {
 		terrainSubMap.Texels[i] = make([]TerrainTexel, regionSize)
 	}
 
-	terrainSubMap.GenerateSubMap(x, y)
+	terrainSubMap.GenerateSubMap(x, y, generationFunction)
 
 	return &terrainSubMap
 }
 
-func (t *TerrainSubMap) GenerateSubMap(x, y int) {
+func (t *TerrainSubMap) GenerateSubMap(x, y int, generationFunction GenerationFunc) {
 	regionSize := config.Config.Terrain.RegionSize
-	heights := Generate(regionSize, regionSize, x*regionSize, y*regionSize)
+	heights := generationFunction(regionSize, regionSize, x*regionSize, y*regionSize)
 	for i := 0; i < regionSize; i++ {
 		for j := 0; j < regionSize; j++ {
 			height := heights[i+j*regionSize]

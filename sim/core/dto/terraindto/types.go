@@ -1,4 +1,4 @@
-package terrain
+package terraindto
 
 import "go-simulate-a-city/sim/config"
 

@@ -1,8 +1,9 @@
 package flat
 
 import (
+	"go-simulate-a-city/sim/core/dto/terraindto"
 	"go-simulate-a-city/sim/core/gamegrid"
-	"go-simulate-a-city/sim/engine/terrain"
+	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/ui"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
@@ -12,7 +13,7 @@ import (
 type TerrainOverlayManager struct {
 	offsetChangeChannel chan mgl32.Vec2
 	scaleChangeChannel  chan float32
-	newTerrainChannel   chan *terrain.TerrainUpdate
+	newTerrainChannel   chan *terraindto.TerrainUpdate
 
 	cameraOffset    mgl32.Vec2
 	cameraScale     float32
@@ -33,21 +34,18 @@ func (t *TerrainOverlayManager) GetOrAddTerrainOverlay(x, y int) *TerrainOverlay
 	return t.TerrainOverlays[x][y]
 }
 
-func NewTerrainOverlayManager(
-	offsetChangeRegChannel chan chan mgl32.Vec2,
-	scaleChangeRegChannel chan chan float32,
-	newTerrainRegChannel chan chan *terrain.TerrainUpdate) *TerrainOverlayManager {
+func NewTerrainOverlayManager() *TerrainOverlayManager {
 	manager := TerrainOverlayManager{
 		cameraOffset:        mgl32.Vec2{0, 0},
 		cameraScale:         1.0,
 		offsetChangeChannel: make(chan mgl32.Vec2, 10),
 		scaleChangeChannel:  make(chan float32, 10),
-		newTerrainChannel:   make(chan *terrain.TerrainUpdate, 10),
+		newTerrainChannel:   make(chan *terraindto.TerrainUpdate, 10),
 		TerrainOverlays:     make(map[int]map[int]*TerrainOverlay)}
 
-	offsetChangeRegChannel <- manager.offsetChangeChannel
-	scaleChangeRegChannel <- manager.scaleChangeChannel
-	newTerrainRegChannel <- manager.newTerrainChannel
+	mailroom.CameraOffsetRegChannel <- manager.offsetChangeChannel
+	mailroom.CameraScaleRegChannel <- manager.scaleChangeChannel
+	mailroom.NewTerrainRegChannel <- manager.newTerrainChannel
 
 	return &manager
 }

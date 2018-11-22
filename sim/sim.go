@@ -5,9 +5,9 @@ import (
 	"go-simulate-a-city/common/commonconfig"
 	"go-simulate-a-city/common/commonopengl"
 	"go-simulate-a-city/sim/config"
+	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine"
 	"go-simulate-a-city/sim/engine/core"
-	"go-simulate-a-city/sim/engine/terrain"
 	"go-simulate-a-city/sim/input"
 	"go-simulate-a-city/sim/input/editorEngine"
 	"go-simulate-a-city/sim/ui"
@@ -86,17 +86,15 @@ func main() {
 		input.InputBuffer.ReleasedKeysRegChannel,
 		core.CoreTimer.HighResRegChannel)
 
+	mailroom.CameraOffsetRegChannel = camera.OffsetChangeRegChannel
+	mailroom.CameraScaleRegChannel = camera.ScaleChangeRegChannel
+	mailroom.BoardPosChangeRegChannel = camera.BoardPosRegChannel
+
 	// Setup simulation
-	engine := engine.NewEngine(camera.OffsetChangeRegChannel, camera.ScaleChangeRegChannel)
+	engine := engine.NewEngine()
 
-	terrainOverlayManager := flat.NewTerrainOverlayManager(
-		camera.OffsetChangeRegChannel,
-		camera.ScaleChangeRegChannel,
-		engine.GetTerrainMap().NewTerrainRegChannel)
+	terrainOverlayManager := flat.NewTerrainOverlayManager()
 	defer terrainOverlayManager.Delete()
-
-	// Precaching only does the outer borders. Ensure we draw the center area.
-	engine.GetTerrainMap().ControlChannel <- terrain.FORCE_REFRESH
 
 	// paused := false
 	update := func() {
