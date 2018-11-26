@@ -13,6 +13,7 @@ import (
 	"go-simulate-a-city/sim/engine/terrain"
 	"go-simulate-a-city/sim/input/editorEngine"
 
+	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
@@ -23,19 +24,24 @@ type Engine struct {
 	roadGrid            *road.RoadGrid
 	infiniRoadGenerator *road.InfiniRoadGenerator
 
-	isMousePressed  bool
-	actionPerformed bool
-	lastBoardPos    mgl32.Vec2
-	powerLineState  *PowerLineEditState
-	roadLineState   *RoadLineEditState
-	snapElements    SnapElements
+	isMousePressed bool
+	lastBoardPos   mgl32.Vec2
+	powerLineState *EditState
+	roadLineState  *EditState
+	snapElements   SnapElements
 
 	editorMode     editorengdto.EditorMode
 	editorAddMode  editorengdto.EditorAddMode
 	editorDrawMode editorengdto.EditorDrawMode
 
+	editorModeChannel     chan editorengdto.EditorMode
+	editorAddModeChannel  chan editorengdto.EditorAddMode
+	editorDrawModeChannel chan editorengdto.EditorDrawMode
+
 	Hypotheticals HypotheticalActions
 
+	mousePressChannel    chan glfw.MouseButton
+	mouseReleaseChannel  chan glfw.MouseButton
 	mouseBoardPosChannel chan mgl32.Vec2
 	ControlChannel       chan int
 }
@@ -44,11 +50,16 @@ func NewEngine() *Engine {
 	terrain.Init(config.Config.Terrain.Generation.Seed)
 
 	engine := Engine{
-		editorMode:           editorengdto.Select,
-		editorAddMode:        editorengdto.PowerPlant,
-		editorDrawMode:       editorengdto.TerrainFlatten,
-		mouseBoardPosChannel: make(chan mgl32.Vec2, 3),
-		ControlChannel:       make(chan int)}
+		editorMode:            editorengdto.Select,
+		editorAddMode:         editorengdto.PowerPlant,
+		editorDrawMode:        editorengdto.TerrainFlatten,
+		editorModeChannel:     make(chan editorengdto.EditorMode),
+		editorAddModeChannel:  make(chan editorengdto.EditorAddMode),
+		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
+		mouseBoardPosChannel:  make(chan mgl32.Vec2, 10),
+		mousePressChannel:     make(chan glfw.MouseButton, 10),
+		mouseReleaseChannel:   make(chan glfw.MouseButton, 10),
+		ControlChannel:        make(chan int)}
 
 	engine.terrainMap = terrain.NewTerrainMap()
 	engine.elementFinder = element.NewElementFinder()
@@ -59,14 +70,19 @@ func NewEngine() *Engine {
 		engine.elementFinder,
 		engine.terrainMap.NewRegionRegChannel)
 	engine.isMousePressed = false
-	engine.actionPerformed = false
-	engine.powerLineState = NewPowerLineEditState()
-	engine.roadLineState = NewRoadLineEditState()
+	engine.powerLineState = NewEditState()
+	engine.roadLineState = NewEditState()
 	engine.snapElements = NewSnapElements()
 
 	engine.Hypotheticals = NewHypotheticalActions()
 
+	mailroom.MousePressedRegChannel <- engine.mousePressChannel
+	mailroom.MouseReleasedRegChannel <- engine.mouseReleaseChannel
 	mailroom.BoardPosChangeRegChannel <- engine.mouseBoardPosChannel
+	mailroom.EngineModeRegChannel <- engine.editorModeChannel
+	mailroom.EngineAddModeRegChannel <- engine.editorAddModeChannel
+	mailroom.EngineDrawModeRegChannel <- engine.editorDrawModeChannel
+
 	mailroom.NewTerrainRegChannel = engine.terrainMap.NewTerrainRegChannel
 	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
 
@@ -74,10 +90,35 @@ func NewEngine() *Engine {
 	return &engine
 }
 
+// func (e *Engine) updateHypotheticalsAndSnapNodes() {
+// 	e.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
+// 	e.ComputeSnapNodes(&editorEngine.EngineState)
+// }
+
 func (e *Engine) run() {
 	for {
 		select {
 		case e.lastBoardPos = <-e.mouseBoardPosChannel:
+		case e.editorMode = <-e.editorModeChannel:
+		case e.editorAddMode = <-e.editorAddModeChannel:
+		case e.editorDrawMode = <-e.editorDrawModeChannel:
+
+		case _ = <-e.mousePressChannel:
+			e.isMousePressed = true
+
+			if e.editorMode == editorengdto.Add && e.editorAddMode == editorengdto.PowerPlant {
+				e.addPowerPlantIfValid()
+			}
+		case _ = <-e.mouseReleaseChannel:
+			e.isMousePressed = false
+
+			if e.editorMode == editorengdto.Add {
+				if e.editorAddMode == editorengdto.PowerLine {
+					e.updatePowerLineState()
+				} else if e.editorAddMode == editorengdto.RoadLine {
+					e.updateRoadLineState()
+				}
+			}
 		case _ = <-e.ControlChannel:
 			return
 		}
@@ -85,10 +126,10 @@ func (e *Engine) run() {
 }
 
 func (e *Engine) addPowerPlantIfValid() {
-	intesectsWithElement := e.elementFinder.IntersectsWithElement(e.getEffectivePosition(), e.Hypotheticals.Regions[0].Region.Scale)
+	intesectsWithElement := false // e.elementFinder.IntersectsWithElement(e.getEffectivePosition(), e.Hypotheticals.Regions[0].Region.Scale)
 
 	if !intesectsWithElement {
-		isGroundValid := e.terrainMap.ValidateGroundLocation(e.Hypotheticals.Regions[0].Region)
+		isGroundValid := true // e.terrainMap.ValidateGroundLocation(e.Hypotheticals.Regions[0].Region)
 		if isGroundValid {
 			plantType := power.GetPlantType(editorengdto.Item1) // TODO: EngineState.ItemSubSelection)
 			plantSize := power.Small                            // TODO: Configurable
@@ -193,39 +234,15 @@ func (e *Engine) getEffectiveRoadGridElement() int {
 	return -1
 }
 
-func (e *Engine) MousePress(pos mgl32.Vec2, engineState editorEngine.State) {
-	e.isMousePressed = true
-	e.lastBoardPos = pos
-	if !e.actionPerformed {
-		if engineState.Mode == editorengdto.Add && engineState.InAddMode == editorengdto.PowerPlant {
-			e.addPowerPlantIfValid()
-		}
-	}
-}
-
-func (e *Engine) MouseRelease(pos mgl32.Vec2, engineState editorEngine.State) {
-	e.isMousePressed = false
-	e.actionPerformed = false
-	e.lastBoardPos = pos
-
-	if e.powerLineState.InPowerLineState(&engineState) {
-		e.updatePowerLineState()
-	}
-
-	if e.roadLineState.InRoadLineState(&engineState) {
-		e.updateRoadLineState()
-	}
-}
-
 // Cancels the state of any multi-step operation, resetting it back to the start.
 func (e *Engine) CancelState(engineState editorEngine.State) {
-	if e.powerLineState.InPowerLineState(&engineState) {
-		e.powerLineState.Reset()
-	}
-
-	if e.roadLineState.InRoadLineState(&engineState) {
-		e.roadLineState.Reset()
-	}
+	// if e.powerLineState.InPowerLineState(&engineState) {
+	// 	e.powerLineState.Reset()
+	// }
+	//
+	// if e.roadLineState.InRoadLineState(&engineState) {
+	// 	e.roadLineState.Reset()
+	// }
 }
 
 func (e *Engine) applyStepDraw(stepAmount float32, engineState *editorEngine.State) {

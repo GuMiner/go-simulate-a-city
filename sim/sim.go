@@ -60,6 +60,9 @@ func main() {
 	window.MakeContextCurrent()
 
 	input.SetupInputBufferAgent()
+	mailroom.MousePressedRegChannel = input.InputBuffer.MousePressedRegChannel
+	mailroom.MouseReleasedRegChannel = input.InputBuffer.MouseReleasedRegChannel
+
 	setInputCallbacks(window)
 	commonOpenGl.ConfigureOpenGl()
 
@@ -98,37 +101,11 @@ func main() {
 
 	// paused := false
 	update := func() {
-
 		// Must be first.
 		glfw.PollEvents()
 
 		customCursors.Update(window)
 
-		// editorStateUpdated, editorSubStateUpdated := editorEngine.Update()
-		// if editorStateUpdated || editorSubStateUpdated {
-		// 	// The edit state has updated, update as needed
-		// 	ui.UpdateEditorState(editorEngine.EngineState, window)
-		// }
-		//
-		// boardPos := camera.MapPixelPosToBoard(mgl32.Vec2{0, 0}) //input.MousePos)
-		// if editorStateUpdated || true {                         // mouseMoved {
-		// 	engine.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
-		// 	engine.ComputeSnapNodes(&editorEngine.EngineState)
-		// }
-
-		// if input.MousePressEvent {
-		// 	engine.MousePress(boardPos, editorEngine.EngineState)
-		// 	input.MousePressEvent = false
-		// }
-		//
-		// if input.MouseReleaseEvent {
-		// 	engine.MouseRelease(boardPos, editorEngine.EngineState)
-		// 	input.MouseReleaseEvent = false
-		// }
-		//
-		// if true { // mouseMoved {
-		// 	engine.MouseMoved(boardPos, editorEngine.EngineState)
-		// }
 		//
 		// if input.IsTyped(input.CancelKey) {
 		// 	engine.CancelState(editorEngine.EngineState)

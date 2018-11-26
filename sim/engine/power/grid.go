@@ -2,14 +2,14 @@ package power
 
 import (
 	"fmt"
-	"go-simulate-a-city/sim/engine/core"
+	"go-simulate-a-city/sim/core/graph"
 	"go-simulate-a-city/sim/engine/element"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 type PowerGrid struct {
-	grid    *core.ResizeableGraph
+	grid    *graph.Graph
 	nodeMap map[int]element.Element // Reverse maps a node ID to an element.
 
 	powerPlants    map[int64]*PowerPlant
@@ -21,7 +21,7 @@ type PowerGrid struct {
 
 func NewPowerGrid() *PowerGrid {
 	grid := PowerGrid{
-		grid:           core.NewResizeableGraph(),
+		grid:           graph.NewGraph(),
 		nodeMap:        make(map[int]element.Element),
 		powerPlants:    make(map[int64]*PowerPlant),
 		nextPowerPlant: 0,
@@ -41,7 +41,7 @@ func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSi
 		size:        float32(size),
 		orientation: 0, // TODO: Rotation
 		output:      output,
-		gridId:      p.grid.AddNode()}
+		gridId:      p.grid.AddNode(nil)}
 
 	p.nodeMap[plant.gridId] = &plant
 
@@ -65,15 +65,15 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 		return nil
 	} else if startNode != -1 && endNode != -1 {
 		// This might be a duplicate line.
-		cost := p.grid.Cost(startNode, endNode)
-		if cost != -1 {
+		connectionStatus := p.grid.AddConnection(startNode, endNode, capacity)
+		if connectionStatus == graph.Exists {
 			fmt.Printf("There already is a line from %v to %v.\n", startNode, endNode)
 			return nil
 		}
 	}
 
 	if startNode == -1 {
-		line.startNode = p.grid.AddNode()
+		line.startNode = p.grid.AddNode(nil)
 		line.ownsStartNode = true
 		p.nodeMap[line.startNode] = &line
 	} else {
@@ -82,7 +82,7 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 	}
 
 	if endNode == -1 {
-		line.endNode = p.grid.AddNode()
+		line.endNode = p.grid.AddNode(nil)
 		line.ownsEndNode = true
 		p.nodeMap[line.endNode] = &line
 	} else {
@@ -90,8 +90,7 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 		line.ownsEndNode = false
 	}
 
-	p.grid.AddOrUpdateEdgeCost(line.startNode, line.endNode, line.capacity)
-	p.grid.AddOrUpdateEdgeCost(line.endNode, line.startNode, line.capacity)
+	p.grid.AddConnection(line.startNode, line.endNode, line.capacity)
 	p.powerLines[p.nextPowerLine] = &line
 	p.nextPowerLine++
 

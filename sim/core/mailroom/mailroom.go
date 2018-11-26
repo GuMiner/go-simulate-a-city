@@ -5,10 +5,16 @@ import (
 	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/dto/terraindto"
 
+	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 // Defines the mailroom designed to easily connect the core channels making up the game engine
+// This does make it slightly harder to ensure proper first-time setup, but significantly simplifies doing that setup.
+
+// Generic input
+var MousePressedRegChannel chan chan glfw.MouseButton
+var MouseReleasedRegChannel chan chan glfw.MouseButton
 
 // Camera
 var CameraOffsetRegChannel chan chan mgl32.Vec2
