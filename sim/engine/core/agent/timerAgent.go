@@ -13,7 +13,6 @@ type Timer struct {
 
 	ControlChannel      chan int
 	RegistrationChannel chan chan dto.Time
-	HighResRegChannel   chan chan time.Time
 }
 
 func NewTimer() Timer {
@@ -21,35 +20,12 @@ func NewTimer() Timer {
 		registeredChannels:  make([]chan dto.Time, 0),
 		highResChannels:     make([]chan time.Time, 0),
 		ControlChannel:      make(chan int),
-		RegistrationChannel: make(chan chan dto.Time),
-		HighResRegChannel:   make(chan chan time.Time)}
+		RegistrationChannel: make(chan chan dto.Time)}
 
 	ticker := time.NewTicker(100 * time.Millisecond)
-	highResTicker := time.NewTicker(20 * time.Millisecond)
 	go timer.run(ticker)
-	go timer.runHighRes(highResTicker)
 
 	return timer
-}
-
-func (t *Timer) runHighRes(ticker *time.Ticker) {
-	for {
-		time := <-ticker.C
-		for _, channel := range t.highResChannels {
-			channel <- time
-		}
-
-		select {
-		case registration := <-t.HighResRegChannel:
-			t.highResChannels = append(t.highResChannels, registration)
-			break
-		case _ = <-t.ControlChannel:
-			ticker.Stop()
-			return
-		default:
-			break
-		}
-	}
 }
 
 func (t *Timer) run(ticker *time.Ticker) {
@@ -66,14 +42,12 @@ func (t *Timer) run(ticker *time.Ticker) {
 		}
 
 		select {
-		case registration := <-t.RegistrationChannel:
-			t.registeredChannels = append(t.registeredChannels, registration)
-			break
+		case reg := <-t.RegistrationChannel:
+			t.registeredChannels = append(t.registeredChannels, reg)
 		case _ = <-t.ControlChannel:
 			ticker.Stop()
 			return
 		default:
-			break
 		}
 	}
 }

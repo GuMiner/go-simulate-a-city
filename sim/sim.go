@@ -16,6 +16,7 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
+	"time"
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -86,8 +87,7 @@ func main() {
 		input.InputBuffer.MouseMoveRegChannel,
 		input.InputBuffer.MouseScrollRegChannel,
 		input.InputBuffer.PressedKeysRegChannel,
-		input.InputBuffer.ReleasedKeysRegChannel,
-		core.CoreTimer.HighResRegChannel)
+		input.InputBuffer.ReleasedKeysRegChannel)
 
 	mailroom.CameraOffsetRegChannel = camera.OffsetChangeRegChannel
 	mailroom.CameraScaleRegChannel = camera.ScaleChangeRegChannel
@@ -102,10 +102,20 @@ func main() {
 	defer terrainOverlayManager.Delete()
 
 	// paused := false
+
+	startTime := time.Now()
+	frameTime := float32(0.1)
+	lastElapsed := float32(0.0)
+	elapsed := lastElapsed
 	update := func() {
+		lastElapsed = elapsed
+		elapsed = float32(time.Since(startTime)) / float32(time.Second)
+		frameTime = elapsed - lastElapsed
+
 		// Must be first.
 		glfw.PollEvents()
 
+		camera.StepUpdate(frameTime)
 		customCursors.Update(window)
 
 		//

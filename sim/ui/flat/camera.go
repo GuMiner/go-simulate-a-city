@@ -12,13 +12,6 @@ import (
 	"github.com/go-gl/mathgl/mgl32"
 )
 
-var isLeftPressed = false
-var isRightPressed = false
-var isUpPressed = false
-var isDownPressed = false
-var lastTimeTick time.Time
-var ticked bool = false
-
 type Camera struct {
 	mouseMoves     chan mgl32.Vec2
 	mouseScrolls   chan float32
@@ -33,11 +26,16 @@ type Camera struct {
 	scaleChangeRegs       []chan float32
 	ScaleChangeRegChannel chan chan float32
 
+	isLeftPressed  bool
+	isRightPressed bool
+	isUpPressed    bool
+	isDownPressed  bool
+
 	boardPosRegs       []chan mgl32.Vec2
 	BoardPosRegChannel chan chan mgl32.Vec2
 
-	zoomFactor float32
-	offset     mgl32.Vec2
+	Scale  float32
+	Offset mgl32.Vec2
 
 	lastUpdateTicks uint
 	keyMotionAmount float32
@@ -47,17 +45,15 @@ func NewCamera(
 	mouseMoveRegChannel chan chan mgl32.Vec2,
 	mouseScrollRegChannel chan chan float32,
 	keyPressedRegChannel chan chan glfw.Key,
-	keyReleasedRegChannel chan chan glfw.Key,
-	highResRegChannel chan chan time.Time) *Camera {
+	keyReleasedRegChannel chan chan glfw.Key) *Camera {
 
 	camera := Camera{
-		zoomFactor:             1.0,
-		offset:                 mgl32.Vec2{0, 0},
+		Scale:                  1.0,
+		Offset:                 mgl32.Vec2{0, 0},
 		mouseMoves:             make(chan mgl32.Vec2, 2),
 		mouseScrolls:           make(chan float32, 2),
 		keyPresses:             make(chan glfw.Key, 2),
 		keyReleases:            make(chan glfw.Key, 2),
-		highResTicks:           make(chan time.Time, 2),
 		ControlChannel:         make(chan int),
 		lastUpdateTicks:        0,
 		offsetChangeRegs:       make([]chan mgl32.Vec2, 0),
@@ -69,7 +65,6 @@ func NewCamera(
 
 	mouseMoveRegChannel <- camera.mouseMoves
 	mouseScrollRegChannel <- camera.mouseScrolls
-	highResRegChannel <- camera.highResTicks
 	keyPressedRegChannel <- camera.keyPresses
 	keyReleasedRegChannel <- camera.keyReleases
 
@@ -78,51 +73,51 @@ func NewCamera(
 	return &camera
 }
 
-func parseKeyCode(keyCode glfw.Key, stateTransition bool) {
+func (c *Camera) parseKeyCode(keyCode glfw.Key, stateTransition bool) {
 	switch keyCode {
 	case input.GetKeyCode(input.MoveUpKey):
-		isUpPressed = stateTransition
+		c.isUpPressed = stateTransition
 		break
 	case input.GetKeyCode(input.MoveRightKey):
-		isRightPressed = stateTransition
+		c.isRightPressed = stateTransition
 		break
 	case input.GetKeyCode(input.MoveDownKey):
-		isDownPressed = stateTransition
+		c.isDownPressed = stateTransition
 		break
 	case input.GetKeyCode(input.MoveLeftKey):
-		isLeftPressed = stateTransition
+		c.isLeftPressed = stateTransition
 		break
 	default:
 		break
 	}
 }
 
-func (c *Camera) handleTickMotion(interval float32) {
-	keyMotionAmount := interval * config.Config.Ui.Camera.KeyMotionFactor * (1.0 / c.zoomFactor)
+func (c *Camera) StepUpdate(interval float32) {
+	keyMotionAmount := interval * config.Config.Ui.Camera.KeyMotionFactor * (1.0 / c.Scale)
 	offsetChanged := false
-	if isLeftPressed {
-		c.offset[0] -= keyMotionAmount
+	if c.isLeftPressed {
+		c.Offset[0] -= keyMotionAmount
 		offsetChanged = true
 	}
 
-	if isRightPressed {
-		c.offset[0] += keyMotionAmount
+	if c.isRightPressed {
+		c.Offset[0] += keyMotionAmount
 		offsetChanged = true
 	}
 
-	if isUpPressed {
-		c.offset[1] -= keyMotionAmount
+	if c.isUpPressed {
+		c.Offset[1] -= keyMotionAmount
 		offsetChanged = true
 	}
 
-	if isDownPressed {
-		c.offset[1] += keyMotionAmount
+	if c.isDownPressed {
+		c.Offset[1] += keyMotionAmount
 		offsetChanged = true
 	}
 
 	if offsetChanged {
 		for _, reg := range c.offsetChangeRegs {
-			reg <- c.offset
+			reg <- c.Offset
 		}
 	}
 }
@@ -142,23 +137,14 @@ func (c *Camera) run() {
 				reg <- boardPos
 			}
 		case scrollAmount := <-c.mouseScrolls:
-			c.zoomFactor *= (1.0 + scrollAmount*config.Config.Ui.Camera.MouseScrollFactor)
+			c.Scale *= (1.0 + scrollAmount*config.Config.Ui.Camera.MouseScrollFactor)
 			for _, reg := range c.scaleChangeRegs {
-				reg <- c.zoomFactor
+				reg <- c.Scale
 			}
 		case keyCode := <-c.keyPresses:
-			parseKeyCode(keyCode, true)
+			c.parseKeyCode(keyCode, true)
 		case keyCode := <-c.keyReleases:
-			parseKeyCode(keyCode, false)
-		case time := <-c.highResTicks:
-			if !ticked {
-				ticked = true
-			} else {
-				timeSinceLastTick := float32(time.Sub(lastTimeTick).Seconds())
-				c.handleTickMotion(timeSinceLastTick)
-			}
-
-			lastTimeTick = time
+			c.parseKeyCode(keyCode, false)
 		case _ = <-c.ControlChannel:
 			return
 		}
@@ -170,12 +156,12 @@ func (c *Camera) MapPixelPosToBoard(pixelPos mgl32.Vec2) mgl32.Vec2 {
 	windowSize := commonOpenGl.GetWindowSize()
 	return gamegrid.MapToBoard(
 		mgl32.Vec2{pixelPos.X() / windowSize.X(), pixelPos.Y() / windowSize.Y()},
-		c.offset,
-		c.zoomFactor)
+		c.Offset,
+		c.Scale)
 }
 
 func (c *Camera) MapEngineLineToScreen(line [2]mgl32.Vec2) [2]mgl32.Vec2 {
 	return [2]mgl32.Vec2{
-		gamegrid.MapPositionToScreen(line[0], c.zoomFactor, c.offset),
-		gamegrid.MapPositionToScreen(line[1], c.zoomFactor, c.offset)}
+		gamegrid.MapPositionToScreen(line[0], c.Scale, c.Offset),
+		gamegrid.MapPositionToScreen(line[1], c.Scale, c.Offset)}
 }
