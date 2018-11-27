@@ -28,8 +28,8 @@ func (t *TerrainOverlay) GetOverlay() *overlay.Overlay {
 }
 
 func (t *TerrainOverlay) UpdateCameraOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) {
-	regionOffset := gamegrid.GetRegionOffset(x, y, offset, zoomFactor)
-	scale := gamegrid.GetRegionScale(zoomFactor)
+	regionOffset := gamegrid.GetRegionTileOffset(x, y, offset, zoomFactor)
+	scale := gamegrid.GetRegionTileScale(zoomFactor)
 
 	t.overlay.UpdateLocation(regionOffset, scale, 1.0)
 }

@@ -26,4 +26,5 @@ func Init(window *glfw.Window) {
 func Delete() {
 	Ui.OverlayProgram.Delete()
 	Ui.RegionProgram.Delete()
+	Ui.LinesProgram.Delete()
 }

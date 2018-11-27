@@ -64,9 +64,9 @@ func MapToBoard(screenPos mgl32.Vec2, offset mgl32.Vec2, scale float32) mgl32.Ve
 	return regionPos
 }
 
-// Resizes a full-size region to the appropriate scale given the current screen size and zoom factor
+// Resizes a full-size region tile to the appropriate scale given the current screen size and zoom factor
 // Returns the screen size (a full size tile will span from (0, 0) to (1, 1))
-func GetRegionScale(zoomFactor float32) mgl32.Vec2 {
+func GetRegionTileScale(zoomFactor float32) mgl32.Vec2 {
 	regionSize := config.Config.Terrain.RegionSize
 	windowSize := commonOpenGl.GetWindowSize()
 	return mgl32.Vec2{
@@ -75,7 +75,7 @@ func GetRegionScale(zoomFactor float32) mgl32.Vec2 {
 }
 
 // Returns the screen position ((0, 0) to (1, 1)) of the region tile requested
-func GetRegionOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) mgl32.Vec2 {
+func GetRegionTileOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) mgl32.Vec2 {
 	regionSize := config.Config.Terrain.RegionSize
 	windowSize := commonOpenGl.GetWindowSize()
 
@@ -83,4 +83,21 @@ func GetRegionOffset(x, y int, offset mgl32.Vec2, zoomFactor float32) mgl32.Vec2
 	modifiedRegionStart := regionStart.Sub(offset).Mul(zoomFactor)
 
 	return mgl32.Vec2{modifiedRegionStart.X()/windowSize.X() + 0.5, modifiedRegionStart.Y()/windowSize.Y() + 0.5}
+}
+
+// Maps a region on the board to a GLSL (-1, -1) to (1, 1) region
+func MapEngineRegionToScreen(region *commonMath.Region, zoomFactor float32, offset mgl32.Vec2) *commonMath.Region {
+	// The only variables that are updated (for now) are position and scale
+	return &commonMath.Region{
+		RegionType:  region.RegionType,
+		Orientation: region.Orientation,
+		Scale:       region.Scale / zoomFactor,
+		Position:    MapPositionToScreen(region.Position, zoomFactor, offset)}
+}
+
+func MapPositionToScreen(point mgl32.Vec2, zoomFactor float32, offset mgl32.Vec2) mgl32.Vec2 {
+	windowSize := commonOpenGl.GetWindowSize()
+	point = point.Sub(offset).Mul(zoomFactor)
+	point = mgl32.Vec2{2 * point.X() / windowSize.X(), -2 * point.Y() / windowSize.Y()}
+	return point
 }

@@ -55,17 +55,13 @@ func (t *TerrainOverlayManager) drainInputChannels() {
 	for inputLeft {
 		select {
 		case t.cameraOffset = <-t.offsetChangeChannel:
-			break
 		case t.cameraScale = <-t.scaleChangeChannel:
-			break
 		case newTerrain := <-t.newTerrainChannel:
 			t.GetOrAddTerrainOverlay(
 				newTerrain.Pos.X(),
 				newTerrain.Pos.Y()).SetTerrain(newTerrain.Texels)
-			break
 		default:
 			inputLeft = false
-			break
 		}
 	}
 }

@@ -2,6 +2,7 @@ package power
 
 import (
 	"fmt"
+	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/core/graph"
 	"go-simulate-a-city/sim/engine/element"
 
@@ -17,18 +18,38 @@ type PowerGrid struct {
 
 	powerLines    map[int64]*PowerLine
 	nextPowerLine int64
+
+	newPlantRegionRegistrations []chan *commonMath.Region
+	NewPlantRegionRegChannel    chan chan *commonMath.Region
+	ControlChannel              chan int
 }
 
 func NewPowerGrid() *PowerGrid {
 	grid := PowerGrid{
-		grid:           graph.NewGraph(),
-		nodeMap:        make(map[int]element.Element),
-		powerPlants:    make(map[int64]*PowerPlant),
-		nextPowerPlant: 0,
-		powerLines:     make(map[int64]*PowerLine),
-		nextPowerLine:  0}
+		grid:                        graph.NewGraph(),
+		nodeMap:                     make(map[int]element.Element),
+		powerPlants:                 make(map[int64]*PowerPlant),
+		nextPowerPlant:              0,
+		powerLines:                  make(map[int64]*PowerLine),
+		nextPowerLine:               0,
+		newPlantRegionRegistrations: make([]chan *commonMath.Region, 0),
+		NewPlantRegionRegChannel:    make(chan chan *commonMath.Region),
+		ControlChannel:              make(chan int)}
+
+	go grid.run()
 
 	return &grid
+}
+
+func (p *PowerGrid) run() {
+	for {
+		select {
+		case reg := <-p.NewPlantRegionRegChannel:
+			p.newPlantRegionRegistrations = append(p.newPlantRegionRegistrations, reg)
+		case _ = <-p.ControlChannel:
+			return
+		}
+	}
 }
 
 func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSize) *PowerPlant {
@@ -49,6 +70,10 @@ func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSi
 	fmt.Printf("Added power plant '%v'.\n", p.powerPlants[p.nextPowerPlant])
 
 	p.nextPowerPlant++
+
+	for _, reg := range p.newPlantRegionRegistrations {
+		reg <- plant.GetRegion()
+	}
 
 	return &plant
 }

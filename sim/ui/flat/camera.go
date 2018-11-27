@@ -1,7 +1,6 @@
 package flat
 
 import (
-	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/common/commonopengl"
 	"time"
 
@@ -175,35 +174,8 @@ func (c *Camera) MapPixelPosToBoard(pixelPos mgl32.Vec2) mgl32.Vec2 {
 		c.zoomFactor)
 }
 
-// Maps a region on the board to a GLSL (-1, -1) to (1, 1) region
-func (c *Camera) MapEngineRegionToScreen(region *commonMath.Region) *commonMath.Region {
-	// The only variables that are updated (for now) are position and scale
-	region.Scale *= (1.0 / c.zoomFactor)
-	region.Position = c.MapPositionToScreen(region.Position)
-	return region
-}
-
 func (c *Camera) MapEngineLineToScreen(line [2]mgl32.Vec2) [2]mgl32.Vec2 {
 	return [2]mgl32.Vec2{
-		c.MapPositionToScreen(line[0]),
-		c.MapPositionToScreen(line[1])}
-}
-
-func (c *Camera) MapPositionToScreen(point mgl32.Vec2) mgl32.Vec2 {
-	windowSize := commonOpenGl.GetWindowSize()
-	point = point.Sub(c.offset).Mul(c.zoomFactor)
-	point = mgl32.Vec2{2 * point.X() / windowSize.X(), -2 * point.Y() / windowSize.Y()}
-	return point
-}
-
-func (c *Camera) GetZoomFactor() float32 {
-	return c.zoomFactor
-}
-
-func (c *Camera) GetOffset() mgl32.Vec2 {
-	return c.offset
-}
-
-func (c *Camera) getScaleMotionFactor() float32 {
-	return c.zoomFactor
+		gamegrid.MapPositionToScreen(line[0], c.zoomFactor, c.offset),
+		gamegrid.MapPositionToScreen(line[1], c.zoomFactor, c.offset)}
 }

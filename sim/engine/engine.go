@@ -85,6 +85,7 @@ func NewEngine() *Engine {
 
 	mailroom.NewTerrainRegChannel = engine.terrainMap.NewTerrainRegChannel
 	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
+	mailroom.NewPlantRegionRegChannel = engine.powerGrid.NewPlantRegionRegChannel
 
 	go engine.run()
 	return &engine

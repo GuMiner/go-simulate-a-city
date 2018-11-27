@@ -96,6 +96,8 @@ func main() {
 	// Setup simulation
 	engine := engine.NewEngine()
 
+	powerGridRenderer := flat.NewPowerGridRenderer()
+
 	terrainOverlayManager := flat.NewTerrainOverlayManager()
 	defer terrainOverlayManager.Delete()
 
@@ -126,10 +128,10 @@ func main() {
 		terrainOverlayManager.Render()
 
 		ui.Ui.RegionProgram.PreRender()
-		for _, hypotheticalRegion := range engine.Hypotheticals.Regions {
-			mappedRegion := camera.MapEngineRegionToScreen(&hypotheticalRegion.Region)
-			ui.Ui.RegionProgram.Render(mappedRegion, hypotheticalRegion.Color)
-		}
+		// for _, hypotheticalRegion := range engine.Hypotheticals.Regions {
+		// 	mappedRegion := camera.MapEngineRegionToScreen(&hypotheticalRegion.Region)
+		// 	ui.Ui.RegionProgram.Render(mappedRegion, hypotheticalRegion.Color)
+		// }
 
 		ui.Ui.LinesProgram.PreRender()
 		for _, hypotheticalLine := range engine.Hypotheticals.Lines {
@@ -137,7 +139,7 @@ func main() {
 			ui.Ui.LinesProgram.Render([][2]mgl32.Vec2{mappedLine}, hypotheticalLine.Color)
 		}
 
-		flat.RenderPowerPlants(engine.GetPowerGrid(), camera, ui.Ui.RegionProgram)
+		powerGridRenderer.Render(ui.Ui.RegionProgram)
 		flat.RenderPowerLines(engine.GetPowerGrid(), camera, ui.Ui.LinesProgram)
 
 		flat.RenderRoadLines(engine.GetRoadGrid(), camera, ui.Ui.LinesProgram)

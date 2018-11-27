@@ -29,3 +29,6 @@ var NewRegionRegChannel chan chan commonMath.IntVec2
 var EngineModeRegChannel chan chan editorengdto.EditorMode
 var EngineAddModeRegChannel chan chan editorengdto.EditorAddMode
 var EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
+
+// Power Plants
+var NewPlantRegionRegChannel chan chan *commonMath.Region
