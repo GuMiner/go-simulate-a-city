@@ -3,6 +3,7 @@ package mailroom
 import (
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/core/dto/editorengdto"
+	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/dto/terraindto"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -32,3 +33,7 @@ var EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
 
 // Power Plants
 var NewPlantRegionRegChannel chan chan *commonMath.Region
+
+// Road Lines
+var NewRoadLineChannel chan geometry.IdLine
+var DeleteRoadLineChannel chan int64

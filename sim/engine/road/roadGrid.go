@@ -2,6 +2,8 @@ package road
 
 import (
 	"fmt"
+	"go-simulate-a-city/sim/core/dto/geometry"
+	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core"
 	"go-simulate-a-city/sim/engine/element"
 
@@ -62,16 +64,12 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 		line.ownsEndNode = false
 	}
 
+	// TODO: road grid needs updating to the new structure, power grid needs cleanup to it as well.
+	mailroom.NewRoadLineChannel <- geometry.NewIdLine(p.nextRoadLine, [2]mgl32.Vec2{start, end})
 	p.grid.AddOrUpdateEdgeCost(line.startNode, line.endNode, line.capacity)
 	p.grid.AddOrUpdateEdgeCost(line.endNode, line.startNode, line.capacity)
 	p.roadLines[p.nextRoadLine] = &line
 	p.nextRoadLine++
 
 	return &line
-}
-
-func (p *RoadGrid) IterateLines(iterate func(*RoadLine)) {
-	for _, line := range p.roadLines {
-		iterate(line)
-	}
 }

@@ -279,10 +279,6 @@ func (e *Engine) GetPowerGrid() *power.PowerGrid {
 	return e.powerGrid
 }
 
-func (e *Engine) GetRoadGrid() *road.RoadGrid {
-	return e.roadGrid
-}
-
 func (e *Engine) GetElementFinder() *element.ElementFinder {
 	return e.elementFinder
 }

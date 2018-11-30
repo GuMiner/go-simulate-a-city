@@ -97,6 +97,10 @@ func main() {
 	engine := engine.NewEngine()
 
 	powerGridRenderer := flat.NewPowerGridRenderer()
+	roadGridRenderer := flat.NewRoadGridRenderer()
+
+	mailroom.NewRoadLineChannel = roadGridRenderer.Renderer.NewLineChannel
+	mailroom.DeleteRoadLineChannel = roadGridRenderer.Renderer.DeleteLineChannel
 
 	terrainOverlayManager := flat.NewTerrainOverlayManager()
 	defer terrainOverlayManager.Delete()
@@ -152,7 +156,7 @@ func main() {
 		powerGridRenderer.Render(ui.Ui.RegionProgram)
 		flat.RenderPowerLines(engine.GetPowerGrid(), camera, ui.Ui.LinesProgram)
 
-		flat.RenderRoadLines(engine.GetRoadGrid(), camera, ui.Ui.LinesProgram)
+		roadGridRenderer.Renderer.Render()
 
 		flat.RenderSnapNodes(engine.GetSnapElements(), camera, ui.Ui.RegionProgram)
 	}
