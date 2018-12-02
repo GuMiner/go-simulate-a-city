@@ -85,7 +85,6 @@ func NewEngine() *Engine {
 
 	mailroom.NewTerrainRegChannel = engine.terrainMap.NewTerrainRegChannel
 	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
-	mailroom.NewPlantRegionRegChannel = engine.powerGrid.NewPlantRegionRegChannel
 
 	go engine.run()
 	return &engine
@@ -273,10 +272,6 @@ func (e *Engine) StepEdit(stepAmount float32, engineState editorEngine.State) {
 
 func (e *Engine) ComputeSnapNodes(engineState *editorEngine.State) {
 	e.snapElements.ComputeSnappedSnapElements(e.lastBoardPos, e.elementFinder, engineState)
-}
-
-func (e *Engine) GetPowerGrid() *power.PowerGrid {
-	return e.powerGrid
 }
 
 func (e *Engine) GetElementFinder() *element.ElementFinder {

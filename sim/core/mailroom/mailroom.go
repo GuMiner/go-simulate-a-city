@@ -31,8 +31,13 @@ var EngineModeRegChannel chan chan editorengdto.EditorMode
 var EngineAddModeRegChannel chan chan editorengdto.EditorAddMode
 var EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
 
-// Power Plants
-var NewPlantRegionRegChannel chan chan *commonMath.Region
+// --- Rendering ---
+// Power
+var NewPowerLineChannel chan geometry.IdLine
+var DeletePowerLineChannel chan int64
+
+var NewPowerPlantChannel chan geometry.IdRegion
+var DeletePowerPlantChannel chan int64
 
 // Road Lines
 var NewRoadLineChannel chan geometry.IdLine

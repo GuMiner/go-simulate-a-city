@@ -20,7 +20,6 @@ import (
 
 	"github.com/go-gl/gl/v4.5-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 )
 
 func init() {
@@ -97,8 +96,13 @@ func main() {
 	engine := engine.NewEngine()
 
 	powerGridRenderer := flat.NewPowerGridRenderer()
-	roadGridRenderer := flat.NewRoadGridRenderer()
+	mailroom.NewPowerLineChannel = powerGridRenderer.LineRenderer.NewLineChannel
+	mailroom.DeletePowerLineChannel = powerGridRenderer.LineRenderer.DeleteLineChannel
 
+	mailroom.NewPowerPlantChannel = powerGridRenderer.PlantRenderer.NewRegionChannel
+	mailroom.DeletePowerPlantChannel = powerGridRenderer.PlantRenderer.DeleteRegionChannel
+
+	roadGridRenderer := flat.NewRoadGridRenderer()
 	mailroom.NewRoadLineChannel = roadGridRenderer.Renderer.NewLineChannel
 	mailroom.DeleteRoadLineChannel = roadGridRenderer.Renderer.DeleteLineChannel
 
@@ -142,21 +146,22 @@ func main() {
 		terrainOverlayManager.Render()
 
 		ui.Ui.RegionProgram.PreRender()
+
+		powerGridRenderer.PlantRenderer.Render()
 		// for _, hypotheticalRegion := range engine.Hypotheticals.Regions {
 		// 	mappedRegion := camera.MapEngineRegionToScreen(&hypotheticalRegion.Region)
 		// 	ui.Ui.RegionProgram.Render(mappedRegion, hypotheticalRegion.Color)
 		// }
 
 		ui.Ui.LinesProgram.PreRender()
-		for _, hypotheticalLine := range engine.Hypotheticals.Lines {
-			mappedLine := camera.MapEngineLineToScreen(hypotheticalLine.Line)
-			ui.Ui.LinesProgram.Render([][2]mgl32.Vec2{mappedLine}, hypotheticalLine.Color)
-		}
-
-		powerGridRenderer.Render(ui.Ui.RegionProgram)
-		flat.RenderPowerLines(engine.GetPowerGrid(), camera, ui.Ui.LinesProgram)
+		// for _, hypotheticalLine := range engine.Hypotheticals.Lines {
+		// 	mappedLine := camera.MapEngineLineToScreen(hypotheticalLine.Line)
+		// 	ui.Ui.LinesProgram.Render([][2]mgl32.Vec2{mappedLine}, hypotheticalLine.Color)
+		// }
 
 		roadGridRenderer.Renderer.Render()
+
+		powerGridRenderer.LineRenderer.Render()
 
 		flat.RenderSnapNodes(engine.GetSnapElements(), camera, ui.Ui.RegionProgram)
 	}

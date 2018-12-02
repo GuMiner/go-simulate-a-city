@@ -65,7 +65,7 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 	}
 
 	// TODO: road grid needs updating to the new structure, power grid needs cleanup to it as well.
-	mailroom.NewRoadLineChannel <- geometry.NewIdLine(p.nextRoadLine, [2]mgl32.Vec2{start, end})
+	mailroom.NewRoadLineChannel <- geometry.NewIdLine(p.nextRoadLine, [2]mgl32.Vec2{line.start, line.end})
 	p.grid.AddOrUpdateEdgeCost(line.startNode, line.endNode, line.capacity)
 	p.grid.AddOrUpdateEdgeCost(line.endNode, line.startNode, line.capacity)
 	p.roadLines[p.nextRoadLine] = &line

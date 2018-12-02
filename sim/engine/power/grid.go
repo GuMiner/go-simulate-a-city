@@ -2,8 +2,9 @@ package power
 
 import (
 	"fmt"
-	"go-simulate-a-city/common/commonmath"
+	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/graph"
+	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/element"
 
 	"github.com/go-gl/mathgl/mgl32"
@@ -18,38 +19,18 @@ type PowerGrid struct {
 
 	powerLines    map[int64]*PowerLine
 	nextPowerLine int64
-
-	newPlantRegionRegistrations []chan *commonMath.Region
-	NewPlantRegionRegChannel    chan chan *commonMath.Region
-	ControlChannel              chan int
 }
 
 func NewPowerGrid() *PowerGrid {
 	grid := PowerGrid{
-		grid:                        graph.NewGraph(),
-		nodeMap:                     make(map[int]element.Element),
-		powerPlants:                 make(map[int64]*PowerPlant),
-		nextPowerPlant:              0,
-		powerLines:                  make(map[int64]*PowerLine),
-		nextPowerLine:               0,
-		newPlantRegionRegistrations: make([]chan *commonMath.Region, 0),
-		NewPlantRegionRegChannel:    make(chan chan *commonMath.Region),
-		ControlChannel:              make(chan int)}
-
-	go grid.run()
+		grid:           graph.NewGraph(),
+		nodeMap:        make(map[int]element.Element),
+		powerPlants:    make(map[int64]*PowerPlant),
+		nextPowerPlant: 0,
+		powerLines:     make(map[int64]*PowerLine),
+		nextPowerLine:  0}
 
 	return &grid
-}
-
-func (p *PowerGrid) run() {
-	for {
-		select {
-		case reg := <-p.NewPlantRegionRegChannel:
-			p.newPlantRegionRegistrations = append(p.newPlantRegionRegistrations, reg)
-		case _ = <-p.ControlChannel:
-			return
-		}
-	}
 }
 
 func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSize) *PowerPlant {
@@ -69,12 +50,9 @@ func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSi
 	p.powerPlants[p.nextPowerPlant] = &plant
 	fmt.Printf("Added power plant '%v'.\n", p.powerPlants[p.nextPowerPlant])
 
+	mailroom.NewPowerPlantChannel <- geometry.NewIdRegion(p.nextPowerPlant, *plant.GetRegion())
+
 	p.nextPowerPlant++
-
-	for _, reg := range p.newPlantRegionRegistrations {
-		reg <- plant.GetRegion()
-	}
-
 	return &plant
 }
 
@@ -117,6 +95,8 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 
 	p.grid.AddConnection(line.startNode, line.endNode, line.capacity)
 	p.powerLines[p.nextPowerLine] = &line
+
+	mailroom.NewPowerLineChannel <- geometry.NewIdLine(p.nextPowerLine, [2]mgl32.Vec2{line.start, line.end})
 	p.nextPowerLine++
 
 	return &line
