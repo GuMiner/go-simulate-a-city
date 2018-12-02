@@ -169,7 +169,7 @@ func (e *Engine) updateRoadLineState() {
 	} else {
 		// TODO: Configurable capacity
 		roadLineEnd := e.getEffectivePosition()
-		lineId := e.roadGrid.AddLine(e.roadLineState.firstNode,
+		lineId, _, _ := e.roadGrid.AddLine(e.roadLineState.firstNode,
 			roadLineEnd, 1000,
 			e.roadLineState.firstNodeElement, int64(e.getEffectiveRoadGridElement()))
 		if lineId != -1 {

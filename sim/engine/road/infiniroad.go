@@ -85,6 +85,7 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 
 	westNodeId := i.getNodeId(region, -1)
 	eastNodeId := i.getNodeId(region, 1)
+	fmt.Printf("%v, %v, %v, %v\n", region.X(), region.Y(), westNodeId, eastNodeId)
 
 	fRegionSize := float32(config.Config.Terrain.RegionSize)
 	halfYHeight := fRegionSize / 2
@@ -101,7 +102,7 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	// If they don't reset this so we don't attempt to connect to non-existing nodes
 	if westNodeId != -1 {
 		if roadTerminus := i.grid.grid.GetNode(westNodeId); roadTerminus != nil {
-			start = roadTerminus.(RoadTerminus).location
+			start = roadTerminus.(*RoadTerminus).location
 		} else {
 			westNodeId = -1
 		}
@@ -109,7 +110,7 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 
 	if eastNodeId != -1 {
 		if roadTerminus := i.grid.grid.GetNode(eastNodeId); roadTerminus != nil {
-			end = roadTerminus.(RoadTerminus).location
+			end = roadTerminus.(*RoadTerminus).location
 		} else {
 			eastNodeId = -1
 		}
@@ -117,8 +118,9 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 
 	// TODO: Default to highway capacity for the infinte road.
 	// TODO: This should be a lot smarter and follow contours
-	road := i.grid.AddLine(start, end, 1000, westNodeId, eastNodeId)
-	fmt.Printf("  Generated new infinite-road element for [%v, %v]: %v\n", region.X(), region.Y(), road)
+	roadId := int64(-1)
+	roadId, westNodeId, eastNodeId = i.grid.AddLine(start, end, 1000, westNodeId, eastNodeId)
+	fmt.Printf("  Generated new infinite-road element for [%v, %v]: %v\n", region.X(), region.Y(), roadId)
 
 	// i.finder.Add(road) TODO implement finder element addition
 

@@ -19,18 +19,19 @@ func NewRoadGrid() *RoadGrid {
 	return &grid
 }
 
-func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int64) int64 {
+// Adds a ;ome tp the road grid, returning the line ID, start node ID, and end node ID, in that order
+func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int64) (int64, int64, int64) {
 	line := RoadLine{capacity: capacity}
 
 	if startNode == endNode && startNode != -1 {
 		fmt.Printf("Roads must be between nodes and cannot (for a single line) loop\n")
-		return -1
+		return -1, startNode, endNode
 	} else if startNode != -1 && endNode != -1 {
 		// This might be a duplicate line.
 		connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
 		if connectionStatus.Status == graph.Exists {
 			fmt.Printf("There already is a line from %v to %v.\n", startNode, endNode)
-			return -1
+			return -1, startNode, endNode
 		} else {
 			mailroom.NewPowerLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 		}
@@ -47,5 +48,5 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 	connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
 	mailroom.NewRoadLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 
-	return connectionStatus.Id
+	return connectionStatus.Id, startNode, endNode
 }

@@ -170,5 +170,5 @@ func (d *Graph) GetNode(nodeId int64) interface{} {
 	d.nodesLock.Lock()
 	defer d.nodesLock.Unlock()
 
-	return d.nodes[nodeId]
+	return d.nodes[nodeId].data
 }
