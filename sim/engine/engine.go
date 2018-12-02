@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/mailroom"
@@ -62,13 +61,13 @@ func NewEngine() *Engine {
 		ControlChannel:        make(chan int)}
 
 	engine.terrainMap = terrain.NewTerrainMap()
+	mailroom.NewTerrainRegChannel = engine.terrainMap.NewTerrainRegChannel
+	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
+
 	engine.elementFinder = finder.NewElementFinder()
 	engine.powerGrid = power.NewPowerGrid()
 	engine.roadGrid = road.NewRoadGrid()
-	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(
-		engine.roadGrid,
-		engine.elementFinder,
-		engine.terrainMap.NewRegionRegChannel)
+	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(engine.roadGrid)
 	engine.isMousePressed = false
 	engine.powerLineState = NewEditState()
 	engine.roadLineState = NewEditState()
@@ -82,9 +81,6 @@ func NewEngine() *Engine {
 	mailroom.EngineModeRegChannel <- engine.editorModeChannel
 	mailroom.EngineAddModeRegChannel <- engine.editorAddModeChannel
 	mailroom.EngineDrawModeRegChannel <- engine.editorDrawModeChannel
-
-	mailroom.NewTerrainRegChannel = engine.terrainMap.NewTerrainRegChannel
-	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
 
 	go engine.run()
 	return &engine
@@ -133,8 +129,8 @@ func (e *Engine) addPowerPlantIfValid() {
 			plantType := power.GetPlantType(editorengdto.Item1) // TODO: EngineState.ItemSubSelection)
 			plantSize := power.Small                            // TODO: Configurable
 
-			element := e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
-			e.elementFinder.Add(element)
+			_ = e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
+			// e.elementFinder.Add(element)
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Power Plant", power.GetPlantCost(plantType))
 		}
 	}
@@ -173,61 +169,61 @@ func (e *Engine) updateRoadLineState() {
 	} else {
 		// TODO: Configurable capacity
 		roadLineEnd := e.getEffectivePosition()
-		line := e.roadGrid.AddLine(e.roadLineState.firstNode,
+		lineId := e.roadGrid.AddLine(e.roadLineState.firstNode,
 			roadLineEnd, 1000,
-			int(e.roadLineState.firstNodeElement), e.getEffectiveRoadGridElement())
-		if line != nil {
-			e.elementFinder.Add(line)
+			e.roadLineState.firstNodeElement, int64(e.getEffectiveRoadGridElement()))
+		if lineId != -1 {
+			// e.elementFinder.Add(line)
 			roadLineCost := e.roadLineState.firstNode.Sub(roadLineEnd).Len() * 3000 // TODO: Configurable
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Road", roadLineCost)
 
 			e.roadLineState.firstNode = roadLineEnd
-			e.roadLineState.firstNodeElement = int64(line.GetSnapNodeElement(1))
+			e.roadLineState.firstNodeElement = lineId
 		}
 	}
 }
 
 func (e *Engine) getEffectivePosition() mgl32.Vec2 {
-	if e.snapElements.snappedNode != nil {
-		return e.snapElements.snappedNode.Element.GetSnapNodes()[e.snapElements.snappedNode.SnapNodeIdx]
-	}
-
-	if e.snapElements.snappedGridPos != nil {
-		return *e.snapElements.snappedGridPos
-	}
+	// if e.snapElements.snappedNode != nil {
+	// 	return e.snapElements.snappedNode.Element.GetSnapNodes()[e.snapElements.snappedNode.SnapNodeIdx]
+	// }
+	//
+	// if e.snapElements.snappedGridPos != nil {
+	// 	return *e.snapElements.snappedGridPos
+	// }
 
 	return e.lastBoardPos
 }
 
 // TODO: Rename, element is too generic...
 func (e *Engine) getEffectivePowerGridElement() int64 {
-	node := e.snapElements.snappedNode
-	if node != nil {
-		// TODO: New interface for power elements?
-		// if line, ok := node.Element.(*power.PowerLine); ok {
-		// 	return line.GetSnapNodeElement(node.SnapNodeIdx)
-		// }
-		//
-		// if powerPlant, ok := node.Element.(*power.PowerPlant); ok {
-		// 	return powerPlant.GetSnapElement()
-		// }
-		//
-		// panic(fmt.Sprintf("We've snapped to a node that isn't a power grid element: %v\n", node))
-	}
+	// node := e.snapElements.snappedNode
+	// if node != nil {
+	// 	// TODO: New interface for power elements?
+	// 	// if line, ok := node.Element.(*power.PowerLine); ok {
+	// 	// 	return line.GetSnapNodeElement(node.SnapNodeIdx)
+	// 	// }
+	// 	//
+	// 	// if powerPlant, ok := node.Element.(*power.PowerPlant); ok {
+	// 	// 	return powerPlant.GetSnapElement()
+	// 	// }
+	// 	//
+	// 	// panic(fmt.Sprintf("We've snapped to a node that isn't a power grid element: %v\n", node))
+	// }
 
 	// No grid element association.
 	return -1
 }
 
 func (e *Engine) getEffectiveRoadGridElement() int {
-	node := e.snapElements.snappedNode
-	if node != nil {
-		if line, ok := node.Element.(*road.RoadLine); ok {
-			return line.GetSnapNodeElement(node.SnapNodeIdx)
-		}
-
-		panic(fmt.Sprintf("We've snapped to a node that isn't a road element: %v\n", node))
-	}
+	// node := nil // e.snapElements.snappedNode
+	// if node != nil {
+	// 	if line, ok := node.Element.(*road.RoadLine); ok {
+	// 		return line.GetSnapNodeElement(node.SnapNodeIdx)
+	// 	}
+	//
+	// 	panic(fmt.Sprintf("We've snapped to a node that isn't a road element: %v\n", node))
+	// }
 
 	// No grid element association.
 	return -1

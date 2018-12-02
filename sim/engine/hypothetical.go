@@ -53,7 +53,7 @@ func (e *HypotheticalActions) computePowerPlantHypotheticalRegion(n *Engine) {
 		Orientation: 0,
 		Position:    n.getEffectivePosition()}
 
-	anyNearbyObjects := n.elementFinder.IntersectsWithElement(n.lastBoardPos, region.Scale)
+	anyNearbyObjects := false // n.elementFinder.IntersectsWithElement(n.lastBoardPos, region.Scale)
 	var color mgl32.Vec3
 	if !anyNearbyObjects && n.terrainMap.ValidateGroundLocation(region) {
 		color = mgl32.Vec3{0, 1, 0}

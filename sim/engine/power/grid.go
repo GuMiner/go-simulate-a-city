@@ -16,7 +16,6 @@ type PowerGrid struct {
 func NewPowerGrid() *PowerGrid {
 	grid := PowerGrid{
 		grid: graph.NewGraph()}
-
 	return &grid
 }
 
@@ -58,11 +57,11 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 	}
 
 	if startNode == -1 {
-		startNode = p.grid.AddNode(&PowerTerminus{})
+		startNode = p.grid.AddNode(&PowerTerminus{location: start})
 	}
 
 	if endNode == -1 {
-		endNode = p.grid.AddNode(&PowerTerminus{})
+		endNode = p.grid.AddNode(&PowerTerminus{location: end})
 	}
 
 	connectionStatus := p.grid.AddConnection(startNode, endNode, &line)

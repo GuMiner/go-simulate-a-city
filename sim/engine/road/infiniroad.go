@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/engine/element"
+	"go-simulate-a-city/sim/core/mailroom"
 
 	"github.com/ojrac/opensimplex-go"
 
@@ -14,13 +14,12 @@ import (
 // Defines the node ends of the infinitely generated road.
 // These may become invalid as roads are deleted.
 type InfiniRoadNodeEnds struct {
-	// Index 0 == west, 1 == east
-	RoadEnds []int
+	// 0 == West, 1 == East. Simplifies the math below
+	RoadEnds [2]int64
 }
 
 type InfiniRoadGenerator struct {
-	grid   *RoadGrid
-	finder *element.ElementFinder
+	grid *RoadGrid
 
 	noise            *opensimplex.Noise
 	newRegionChannel chan commonMath.IntVec2
@@ -30,22 +29,17 @@ type InfiniRoadGenerator struct {
 	RoadNodeEdges map[int]map[int]InfiniRoadNodeEnds
 }
 
-func NewInfiniRoadGenerator(
-	grid *RoadGrid,
-	finder *element.ElementFinder,
-	NewRegionRegChannel chan chan commonMath.IntVec2) *InfiniRoadGenerator {
+func NewInfiniRoadGenerator(grid *RoadGrid) *InfiniRoadGenerator {
 	infiniRoadGenerator := InfiniRoadGenerator{
 		grid:             grid,
-		finder:           finder,
 		noise:            opensimplex.NewWithSeed(int64(42)), // TODO: Configurable??
 		newRegionChannel: make(chan commonMath.IntVec2, 3),
 		RoadGenerated:    make(map[int]map[int]bool),
 		RoadNodeEdges:    make(map[int]map[int]InfiniRoadNodeEnds)}
 
-	NewRegionRegChannel <- infiniRoadGenerator.newRegionChannel
+	mailroom.NewRegionRegChannel <- infiniRoadGenerator.newRegionChannel
 
 	go infiniRoadGenerator.run()
-
 	return &infiniRoadGenerator
 }
 
@@ -69,7 +63,7 @@ func (i *InfiniRoadGenerator) addMapSliceIfMissing(x int) {
 	}
 }
 
-func (i *InfiniRoadGenerator) getNodeId(region commonMath.IntVec2, offsetX int) int {
+func (i *InfiniRoadGenerator) getNodeId(region commonMath.IntVec2, offsetX int) int64 {
 	effectiveRegion := commonMath.IntVec2{region.X() + offsetX, region.Y()}
 	roadEndIndex := -offsetX
 	roadEndIndex = commonMath.MaxInt(0, roadEndIndex)
@@ -106,16 +100,16 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	// Validate the nodes still exist if indicated. If they do, update the positions
 	// If they don't reset this so we don't attempt to connect to non-existing nodes
 	if westNodeId != -1 {
-		if roadElement, ok := i.grid.nodeMap[westNodeId]; ok {
-			start = roadElement.GetSnapNodes()[1] // West
+		if roadTerminus := i.grid.grid.GetNode(westNodeId); roadTerminus != nil {
+			start = roadTerminus.(RoadTerminus).location
 		} else {
 			westNodeId = -1
 		}
 	}
 
 	if eastNodeId != -1 {
-		if roadElement, ok := i.grid.nodeMap[eastNodeId]; ok {
-			end = roadElement.GetSnapNodes()[0] // East
+		if roadTerminus := i.grid.grid.GetNode(eastNodeId); roadTerminus != nil {
+			end = roadTerminus.(RoadTerminus).location
 		} else {
 			eastNodeId = -1
 		}
@@ -126,7 +120,7 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	road := i.grid.AddLine(start, end, 1000, westNodeId, eastNodeId)
 	fmt.Printf("  Generated new infinite-road element for [%v, %v]: %v\n", region.X(), region.Y(), road)
 
-	i.finder.Add(road)
+	// i.finder.Add(road) TODO implement finder element addition
 
 	// Update our caches so we don't infinitely generate infinite roads.
 	i.markRoadAsGenerated(region)
@@ -135,5 +129,5 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	}
 
 	i.RoadNodeEdges[region.X()][region.Y()] = InfiniRoadNodeEnds{
-		RoadEnds: []int{road.startNode, road.endNode}}
+		RoadEnds: [2]int64{westNodeId, eastNodeId}}
 }

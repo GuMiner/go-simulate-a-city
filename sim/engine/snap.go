@@ -29,7 +29,7 @@ type Snap struct {
 	snapSettingsChannel   chan editorengdto.SnapSetting
 }
 
-func NewSnap(elementFinder *finder.ElementFinder) Snap {
+func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 	s := Snap{
 		mouseBoardPosChannel:  make(chan mgl32.Vec2, 10),
 		editorMode:            editorengdto.Select,
@@ -40,11 +40,11 @@ func NewSnap(elementFinder *finder.ElementFinder) Snap {
 		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
 		snapSettingsChannel:   make(chan editorengdto.SnapSetting)}
 
-	mailroom.BoardPosChangeRegChannel <- engine.mouseBoardPosChannel
-	mailroom.EngineModeRegChannel <- engine.editorModeChannel
-	mailroom.EngineAddModeRegChannel <- engine.editorAddModeChannel
-	mailroom.EngineDrawModeRegChannel <- engine.editorDrawModeChannel
-	mailroom.SnapSettingsRegChannel <- engine.snapSettingsChannel
+	mailroom.BoardPosChangeRegChannel <- s.mouseBoardPosChannel
+	mailroom.EngineModeRegChannel <- s.editorModeChannel
+	mailroom.EngineAddModeRegChannel <- s.editorAddModeChannel
+	mailroom.EngineDrawModeRegChannel <- s.editorDrawModeChannel
+	mailroom.SnapSettingsRegChannel <- s.snapSettingsChannel
 
 	go s.run()
 	return &s
@@ -73,7 +73,7 @@ func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 		snapGridResolution := float32(config.Config.Snap.SnapGridResolution)
 		offsetBoardPos := boardPos.Add(mgl32.Vec2{snapGridResolution / 2, snapGridResolution / 2})
 		snappedIntPosition := commonMath.IntVec2{int(offsetBoardPos.X() / snapGridResolution), int(offsetBoardPos.Y() / snapGridResolution)}
-		snappedPos := mgl32.Vec2{float32(snappedIntPosition.X()), float32(snappedIntPosition.Y())}.Mul(snapGridResolution)
+		_ = mgl32.Vec2{float32(snappedIntPosition.X()), float32(snappedIntPosition.Y())}.Mul(snapGridResolution)
 
 		// TODO: Return the singular snapped grid pos.
 	}

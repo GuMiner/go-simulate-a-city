@@ -165,3 +165,10 @@ func (d *Graph) AddNode(data interface{}) int64 {
 	d.nodeEditBuffer <- NewNodeEdit(Add, d.nodes[nodeIdx].data, nodeIdx)
 	return nodeIdx
 }
+
+func (d *Graph) GetNode(nodeId int64) interface{} {
+	d.nodesLock.Lock()
+	defer d.nodesLock.Unlock()
+
+	return d.nodes[nodeId]
+}

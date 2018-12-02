@@ -94,7 +94,7 @@ func main() {
 	mailroom.BoardPosChangeRegChannel = camera.BoardPosRegChannel
 
 	// Setup simulation
-	engine := engine.NewEngine()
+	_ = engine.NewEngine()
 
 	powerGridRenderer := flat.NewPowerGridRenderer()
 	mailroom.NewPowerLineChannel = powerGridRenderer.LineRenderer.NewLineChannel
@@ -164,7 +164,7 @@ func main() {
 
 		powerGridRenderer.LineRenderer.Render()
 
-		flat.RenderSnapNodes(engine.GetSnapElements(), camera, ui.Ui.RegionProgram)
+		// flat.RenderSnapNodes(engine.GetSnapElements(), camera, ui.Ui.RegionProgram)
 	}
 
 	RenderLoop(update, render, window)

@@ -3,73 +3,49 @@ package road
 import (
 	"fmt"
 	"go-simulate-a-city/sim/core/dto/geometry"
+	"go-simulate-a-city/sim/core/graph"
 	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/core"
-	"go-simulate-a-city/sim/engine/element"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 type RoadGrid struct {
-	grid    *core.ResizeableGraph
-	nodeMap map[int]element.Element // Reverse maps a node ID to an element
-
-	roadLines    map[int64]*RoadLine
-	nextRoadLine int64
+	grid *graph.Graph
 }
 
 func NewRoadGrid() *RoadGrid {
 	grid := RoadGrid{
-		grid:         core.NewResizeableGraph(),
-		nodeMap:      make(map[int]element.Element),
-		roadLines:    make(map[int64]*RoadLine),
-		nextRoadLine: 0}
-
+		grid: graph.NewGraph()}
 	return &grid
 }
 
-func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int) *RoadLine {
-	line := RoadLine{
-		start:    start,
-		end:      end,
-		capacity: capacity}
+func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int64) int64 {
+	line := RoadLine{capacity: capacity}
 
 	if startNode == endNode && startNode != -1 {
 		fmt.Printf("Roads must be between nodes and cannot (for a single line) loop\n")
-		return nil
+		return -1
 	} else if startNode != -1 && endNode != -1 {
 		// This might be a duplicate line.
-		cost := p.grid.Cost(startNode, endNode)
-		if cost != -1 {
-			fmt.Printf("There already is a road from %v to %v.\n", startNode, endNode)
-			return nil
+		connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
+		if connectionStatus.Status == graph.Exists {
+			fmt.Printf("There already is a line from %v to %v.\n", startNode, endNode)
+			return -1
+		} else {
+			mailroom.NewPowerLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 		}
 	}
 
 	if startNode == -1 {
-		line.startNode = p.grid.AddNode()
-		line.ownsStartNode = true
-		p.nodeMap[line.startNode] = &line
-	} else {
-		line.startNode = startNode
-		line.ownsStartNode = false
+		startNode = p.grid.AddNode(&RoadTerminus{location: start})
 	}
 
 	if endNode == -1 {
-		line.endNode = p.grid.AddNode()
-		line.ownsEndNode = true
-		p.nodeMap[line.endNode] = &line
-	} else {
-		line.endNode = endNode
-		line.ownsEndNode = false
+		endNode = p.grid.AddNode(&RoadTerminus{location: end})
 	}
 
-	// TODO: road grid needs updating to the new structure, power grid needs cleanup to it as well.
-	mailroom.NewRoadLineChannel <- geometry.NewIdLine(p.nextRoadLine, [2]mgl32.Vec2{line.start, line.end})
-	p.grid.AddOrUpdateEdgeCost(line.startNode, line.endNode, line.capacity)
-	p.grid.AddOrUpdateEdgeCost(line.endNode, line.startNode, line.capacity)
-	p.roadLines[p.nextRoadLine] = &line
-	p.nextRoadLine++
+	connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
+	mailroom.NewRoadLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 
-	return &line
+	return connectionStatus.Id
 }
