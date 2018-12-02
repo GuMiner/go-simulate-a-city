@@ -5,20 +5,17 @@ import (
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/graph"
 	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/element"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 type PowerGrid struct {
-	grid    *graph.Graph
-	nodeMap map[int]element.Element // Reverse maps a node ID to an element.
+	grid *graph.Graph
 }
 
 func NewPowerGrid() *PowerGrid {
 	grid := PowerGrid{
-		grid:    graph.NewGraph(),
-		nodeMap: make(map[int]element.Element)}
+		grid: graph.NewGraph()}
 
 	return &grid
 }

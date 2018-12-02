@@ -75,6 +75,7 @@ func main() {
 	mailroom.EngineModeRegChannel = editorEngine.EngineModeRegChannel
 	mailroom.EngineAddModeRegChannel = editorEngine.EngineAddModeRegChannel
 	mailroom.EngineDrawModeRegChannel = editorEngine.EngineDrawModeRegChannel
+	mailroom.SnapSettingsRegChannel = editorEngine.SnapSettingsRegChannel
 
 	ui.Init(window)
 	customCursors := ui.NewCustomCursors()

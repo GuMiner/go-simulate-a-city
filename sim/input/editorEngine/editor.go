@@ -14,21 +14,21 @@ type State struct {
 	InDrawMode       editorengdto.EditorDrawMode
 	ItemSubSelection editorengdto.ItemSubSelection
 
-	SnapToGrid     bool
-	SnapToElements bool
-	SnapToAngle    bool
+	SnapSettings map[editorengdto.SnapToggle]bool
 }
 
 type EditorEngine struct {
 	engineModeRegs     []chan editorengdto.EditorMode
 	engineAddModeRegs  []chan editorengdto.EditorAddMode
 	engineDrawModeRegs []chan editorengdto.EditorDrawMode
+	snapSettingRegs    []chan editorengdto.SnapSetting
 
 	engineState              State
 	keyPressChannel          chan glfw.Key
 	EngineModeRegChannel     chan chan editorengdto.EditorMode
 	EngineAddModeRegChannel  chan chan editorengdto.EditorAddMode
 	EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
+	SnapSettingsRegChannel   chan chan editorengdto.SnapSetting
 	ControlChannel           chan int
 }
 
@@ -39,17 +39,21 @@ func NewEditorEngine(keyPressRegChannel chan chan glfw.Key) *EditorEngine {
 			InAddMode:        editorengdto.PowerPlant,
 			InDrawMode:       editorengdto.TerrainFlatten,
 			ItemSubSelection: editorengdto.Item1,
-			SnapToGrid:       true,
-			SnapToElements:   true,
-			SnapToAngle:      false},
+			SnapSettings:     make(map[editorengdto.SnapToggle]bool)},
 		keyPressChannel:          make(chan glfw.Key, 2),
 		engineModeRegs:           make([]chan editorengdto.EditorMode, 0),
 		engineAddModeRegs:        make([]chan editorengdto.EditorAddMode, 0),
 		engineDrawModeRegs:       make([]chan editorengdto.EditorDrawMode, 0),
+		snapSettingRegs:          make([]chan editorengdto.SnapSetting, 0),
 		EngineModeRegChannel:     make(chan chan editorengdto.EditorMode),
 		EngineAddModeRegChannel:  make(chan chan editorengdto.EditorAddMode),
 		EngineDrawModeRegChannel: make(chan chan editorengdto.EditorDrawMode),
+		SnapSettingsRegChannel:   make(chan chan editorengdto.SnapSetting),
 		ControlChannel:           make(chan int)}
+
+	engine.engineState.SnapSettings[editorengdto.SnapToGrid] = true
+	engine.engineState.SnapSettings[editorengdto.SnapToElements] = false
+	engine.engineState.SnapSettings[editorengdto.SnapToAngle] = false
 
 	keyPressRegChannel <- engine.keyPressChannel
 
@@ -68,6 +72,9 @@ func (e *EditorEngine) run() {
 			break
 		case reg := <-e.EngineDrawModeRegChannel:
 			e.engineDrawModeRegs = append(e.engineDrawModeRegs, reg)
+			break
+		case reg := <-e.SnapSettingsRegChannel:
+			e.snapSettingRegs = append(e.snapSettingRegs, reg)
 			break
 		case key := <-e.keyPressChannel:
 			// updated => used to avoid duplicate checks.
@@ -124,16 +131,34 @@ func (e *EditorEngine) checkEditorMode(key glfw.Key) bool {
 func (e *EditorEngine) checkEditorToggles(key glfw.Key) bool {
 	switch key {
 	case input.GetKeyCode(input.SnapToGridKey):
-		e.engineState.SnapToGrid = !e.engineState.SnapToGrid
-		fmt.Printf("Toggled snap-to-grid to %v.\n", e.engineState.SnapToGrid)
+		state := !e.engineState.SnapSettings[editorengdto.SnapToGrid]
+		e.engineState.SnapSettings[editorengdto.SnapToGrid] = state
+
+		fmt.Printf("Toggled snap-to-grid to %v.\n", state)
+
+		for _, reg := range e.snapSettingRegs {
+			reg <- editorengdto.SnapSetting{Setting: editorengdto.SnapToGrid, State: state}
+		}
 		return true
 	case input.GetKeyCode(input.SnapToAngleKey):
-		e.engineState.SnapToAngle = !e.engineState.SnapToAngle
-		fmt.Printf("Toggled snap-to-angle to %v.\n", e.engineState.SnapToAngle)
+		state := !e.engineState.SnapSettings[editorengdto.SnapToAngle]
+		e.engineState.SnapSettings[editorengdto.SnapToAngle] = state
+
+		fmt.Printf("Toggled snap-to-angle to %v.\n", state)
+
+		for _, reg := range e.snapSettingRegs {
+			reg <- editorengdto.SnapSetting{Setting: editorengdto.SnapToAngle, State: state}
+		}
 		return true
 	case input.GetKeyCode(input.SnapToElementsKey):
-		e.engineState.SnapToElements = !e.engineState.SnapToElements
-		fmt.Printf("Toggled snap-to-elements to %v.\n", e.engineState.SnapToElements)
+		state := !e.engineState.SnapSettings[editorengdto.SnapToElements]
+		e.engineState.SnapSettings[editorengdto.SnapToAngle] = state
+
+		fmt.Printf("Toggled snap-to-elements to %v.\n", state)
+
+		for _, reg := range e.snapSettingRegs {
+			reg <- editorengdto.SnapSetting{Setting: editorengdto.SnapToElements, State: state}
+		}
 		return true
 	default:
 		return false

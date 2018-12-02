@@ -7,7 +7,7 @@ import (
 	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core"
 	"go-simulate-a-city/sim/engine/core/dto"
-	"go-simulate-a-city/sim/engine/element"
+	"go-simulate-a-city/sim/engine/finder"
 	"go-simulate-a-city/sim/engine/power"
 	"go-simulate-a-city/sim/engine/road"
 	"go-simulate-a-city/sim/engine/terrain"
@@ -19,7 +19,7 @@ import (
 
 type Engine struct {
 	terrainMap          *terrain.TerrainMap
-	elementFinder       *element.ElementFinder
+	elementFinder       *finder.ElementFinder
 	powerGrid           *power.PowerGrid
 	roadGrid            *road.RoadGrid
 	infiniRoadGenerator *road.InfiniRoadGenerator
@@ -28,7 +28,7 @@ type Engine struct {
 	lastBoardPos   mgl32.Vec2
 	powerLineState *EditState
 	roadLineState  *EditState
-	snapElements   SnapElements
+	snap           *Snap
 
 	editorMode     editorengdto.EditorMode
 	editorAddMode  editorengdto.EditorAddMode
@@ -62,7 +62,7 @@ func NewEngine() *Engine {
 		ControlChannel:        make(chan int)}
 
 	engine.terrainMap = terrain.NewTerrainMap()
-	engine.elementFinder = element.NewElementFinder()
+	engine.elementFinder = finder.NewElementFinder()
 	engine.powerGrid = power.NewPowerGrid()
 	engine.roadGrid = road.NewRoadGrid()
 	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(
@@ -72,7 +72,7 @@ func NewEngine() *Engine {
 	engine.isMousePressed = false
 	engine.powerLineState = NewEditState()
 	engine.roadLineState = NewEditState()
-	engine.snapElements = NewSnapElements()
+	engine.snap = NewSnap(engine.elementFinder)
 
 	engine.Hypotheticals = NewHypotheticalActions()
 
@@ -92,7 +92,6 @@ func NewEngine() *Engine {
 
 // func (e *Engine) updateHypotheticalsAndSnapNodes() {
 // 	e.Hypotheticals.ComputeHypotheticalRegion(engine, &editorEngine.EngineState)
-// 	e.ComputeSnapNodes(&editorEngine.EngineState)
 // }
 
 func (e *Engine) run() {
@@ -268,16 +267,4 @@ func (e *Engine) StepEdit(stepAmount float32, engineState editorEngine.State) {
 	if engineState.Mode == editorengdto.Draw && e.isMousePressed {
 		e.applyStepDraw(stepAmount, &engineState)
 	}
-}
-
-func (e *Engine) ComputeSnapNodes(engineState *editorEngine.State) {
-	e.snapElements.ComputeSnappedSnapElements(e.lastBoardPos, e.elementFinder, engineState)
-}
-
-func (e *Engine) GetElementFinder() *element.ElementFinder {
-	return e.elementFinder
-}
-
-func (e *Engine) GetSnapElements() *SnapElements {
-	return &e.snapElements
 }

@@ -30,6 +30,7 @@ var NewRegionRegChannel chan chan commonMath.IntVec2
 var EngineModeRegChannel chan chan editorengdto.EditorMode
 var EngineAddModeRegChannel chan chan editorengdto.EditorAddMode
 var EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
+var SnapSettingsRegChannel chan chan editorengdto.SnapSetting
 
 // --- Rendering ---
 // Power

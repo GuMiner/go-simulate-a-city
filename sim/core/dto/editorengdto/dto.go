@@ -37,3 +37,16 @@ const (
 	TerrainHills
 	TerrainValleys
 )
+
+type SnapToggle int
+
+const (
+	SnapToAngle SnapToggle = iota
+	SnapToGrid
+	SnapToElements
+)
+
+type SnapSetting struct {
+	Setting SnapToggle
+	State   bool
+}
