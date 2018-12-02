@@ -31,6 +31,7 @@ type Snap struct {
 
 func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 	s := Snap{
+		elementFinder:         elementFinder,
 		mouseBoardPosChannel:  make(chan mgl32.Vec2, 10),
 		editorMode:            editorengdto.Select,
 		editorAddMode:         editorengdto.PowerPlant,
@@ -38,6 +39,9 @@ func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 		editorModeChannel:     make(chan editorengdto.EditorMode),
 		editorAddModeChannel:  make(chan editorengdto.EditorAddMode),
 		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
+		snapToGrid:            false,
+		snapToAngle:           false,
+		snapToElements:        true,
 		snapSettingsChannel:   make(chan editorengdto.SnapSetting)}
 
 	mailroom.BoardPosChangeRegChannel <- s.mouseBoardPosChannel
