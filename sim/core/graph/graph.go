@@ -12,11 +12,18 @@ const (
 	NodesMissing
 )
 
+type ConnectionResult struct {
+	Status ConnectionStatus
+	Id     int64
+}
+
 // Defines a thread-safe bi-directional graph data structure, storing arbitrary node / connection data
 // TODO: Implement edit methods and data retrieval methods
 type Graph struct {
-	nodes        map[int]*Node
-	newNodeIndex int
+	nodes              map[int64]*Node
+	connections        map[int64]*Connection
+	newNodeIndex       int64
+	newConnectionIndex int64
 
 	nodesLock sync.Mutex
 
@@ -27,20 +34,22 @@ type Graph struct {
 	nodeEditRegistrations       []chan NodeEdit
 	ConnectionEditRegChannel    chan chan ConnectionEdit
 	NodeEditRegChannel          chan chan NodeEdit
-	ControlChannel              chan int
+	ControlChannel              chan int64
 }
 
 func NewGraph() *Graph {
 	graph := Graph{
-		nodes:                       make(map[int]*Node),
+		nodes:                       make(map[int64]*Node),
+		connections:                 make(map[int64]*Connection),
 		newNodeIndex:                0,
+		newConnectionIndex:          0,
 		connectionEditBuffer:        make(chan ConnectionEdit, 10),
 		nodeEditBuffer:              make(chan NodeEdit, 10),
 		connectionEditRegistrations: make([]chan ConnectionEdit, 0),
 		nodeEditRegistrations:       make([]chan NodeEdit, 0),
 		ConnectionEditRegChannel:    make(chan chan ConnectionEdit),
 		NodeEditRegChannel:          make(chan chan NodeEdit),
-		ControlChannel:              make(chan int)}
+		ControlChannel:              make(chan int64)}
 
 	go graph.run()
 	return &graph
@@ -68,45 +77,53 @@ func (d *Graph) run() {
 }
 
 // Adds a connection between two nodes, returning the status of the operation
-func (d *Graph) AddConnection(first, second int, data interface{}) ConnectionStatus {
+func (d *Graph) AddConnection(first, second int64, data interface{}) ConnectionResult {
 	d.nodesLock.Lock()
 	defer d.nodesLock.Unlock()
 
 	if _, ok := d.nodes[first]; ok {
 		if _, ok = d.nodes[second]; ok {
 			if _, ok = d.nodes[first].connections[second]; ok {
-				return Exists
+				return ConnectionResult{Status: Exists, Id: d.nodes[first].connections[second].Id}
 			} else {
-				d.nodes[first].connections[second] = data
-				d.nodes[second].connections[first] = data
+				connectionIdx := d.newConnectionIndex
+				d.nodes[first].connections[second] = nodeInternalConnection{Data: data, Id: connectionIdx}
+				d.nodes[second].connections[first] = nodeInternalConnection{Data: data, Id: connectionIdx}
+
 				d.connectionEditBuffer <- NewConnectionEdit(
 					Add,
 					d.nodes[first].data,
+					connectionIdx,
 					first,
 					second,
 					data)
-				return Success
+
+				d.newConnectionIndex++
+				return ConnectionResult{Status: Success, Id: connectionIdx}
 			}
 		}
 	}
 
-	return NodesMissing
+	return ConnectionResult{Status: NodesMissing, Id: -1}
 }
 
 // Deletes a connection, returning true if deleted, false if it was already deleted
-func (d *Graph) DeleteConnection(first, second int) bool {
+func (d *Graph) DeleteConnection(first, second int64) bool {
 	d.nodesLock.Lock()
 	defer d.nodesLock.Unlock()
 
 	if _, ok := d.nodes[first]; ok {
 		if _, ok = d.nodes[second]; ok {
 			if _, ok = d.nodes[first].connections[second]; ok {
+				connectionId := d.nodes[first].connections[second].Id
 				d.connectionEditBuffer <- NewConnectionEdit(
 					Delete,
 					d.nodes[first].data,
+					connectionId,
 					first,
 					second,
 					d.nodes[first].connections[second])
+				delete(d.connections, connectionId)
 				delete(d.nodes[first].connections, second)
 				delete(d.nodes[second].connections, first)
 				return true
@@ -118,12 +135,13 @@ func (d *Graph) DeleteConnection(first, second int) bool {
 }
 
 // Deletes a node, returning the node index if deleted, -1 if it is already gone.
-func (d *Graph) DeleteNode(nodeIdx int) int {
+func (d *Graph) DeleteNode(nodeIdx int64) int64 {
 	d.nodesLock.Lock()
 	defer d.nodesLock.Unlock()
 
 	if _, ok := d.nodes[nodeIdx]; ok {
-		for destinationNode, _ := range d.nodes[nodeIdx].connections {
+		for destinationNode, connectionData := range d.nodes[nodeIdx].connections {
+			delete(d.connections, connectionData.Id)
 			delete(d.nodes[destinationNode].connections, nodeIdx)
 		}
 
@@ -136,7 +154,7 @@ func (d *Graph) DeleteNode(nodeIdx int) int {
 }
 
 // Adds a new node, returning the node's ID
-func (d *Graph) AddNode(data interface{}) int {
+func (d *Graph) AddNode(data interface{}) int64 {
 	d.nodesLock.Lock()
 	defer d.nodesLock.Unlock()
 

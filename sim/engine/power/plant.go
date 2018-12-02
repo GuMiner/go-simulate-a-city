@@ -17,8 +17,6 @@ type PowerPlant struct {
 
 	output int // kW
 	// TODO: Add capacity factor, things impacted by, required resources, etc.
-
-	gridId int
 }
 
 // Implement Element
@@ -44,6 +42,8 @@ func (p *PowerPlant) GetSnapEdges() [][2]mgl32.Vec2 {
 	return make([][2]mgl32.Vec2, 0)
 }
 
-func (p *PowerPlant) GetSnapElement() int {
-	return p.gridId
-}
+//
+// func (p *PowerPlant) GetSnapElement() int {
+// 	return p.gridId
+// }
+//

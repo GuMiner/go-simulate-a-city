@@ -150,16 +150,16 @@ func (e *Engine) updatePowerLineState() {
 	} else {
 		// TODO: Configurable capacity
 		powerLineEnd := e.getEffectivePosition()
-		line := e.powerGrid.AddLine(e.powerLineState.firstNode,
+		lineId := e.powerGrid.AddLine(e.powerLineState.firstNode,
 			powerLineEnd, 1000,
 			e.powerLineState.firstNodeElement, e.getEffectivePowerGridElement())
-		if line != nil {
-			e.elementFinder.Add(line)
+		if lineId != -1 {
+			// e.elementFinder.Add(line)
 			powerLineCost := e.powerLineState.firstNode.Sub(powerLineEnd).Len() * config.Config.Power.PowerLineCost
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Power Line", powerLineCost)
 
 			e.powerLineState.firstNode = powerLineEnd
-			e.powerLineState.firstNodeElement = line.GetSnapNodeElement(1)
+			e.powerLineState.firstNodeElement = lineId
 		}
 	}
 }
@@ -170,20 +170,20 @@ func (e *Engine) updateRoadLineState() {
 	if !e.roadLineState.hasFirstNode {
 		e.roadLineState.firstNode = e.getEffectivePosition()
 		e.roadLineState.hasFirstNode = true
-		e.roadLineState.firstNodeElement = e.getEffectiveRoadGridElement()
+		e.roadLineState.firstNodeElement = int64(e.getEffectiveRoadGridElement())
 	} else {
 		// TODO: Configurable capacity
 		roadLineEnd := e.getEffectivePosition()
 		line := e.roadGrid.AddLine(e.roadLineState.firstNode,
 			roadLineEnd, 1000,
-			e.roadLineState.firstNodeElement, e.getEffectiveRoadGridElement())
+			int(e.roadLineState.firstNodeElement), e.getEffectiveRoadGridElement())
 		if line != nil {
 			e.elementFinder.Add(line)
 			roadLineCost := e.roadLineState.firstNode.Sub(roadLineEnd).Len() * 3000 // TODO: Configurable
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Road", roadLineCost)
 
 			e.roadLineState.firstNode = roadLineEnd
-			e.roadLineState.firstNodeElement = line.GetSnapNodeElement(1)
+			e.roadLineState.firstNodeElement = int64(line.GetSnapNodeElement(1))
 		}
 	}
 }
@@ -201,19 +201,19 @@ func (e *Engine) getEffectivePosition() mgl32.Vec2 {
 }
 
 // TODO: Rename, element is too generic...
-func (e *Engine) getEffectivePowerGridElement() int {
+func (e *Engine) getEffectivePowerGridElement() int64 {
 	node := e.snapElements.snappedNode
 	if node != nil {
 		// TODO: New interface for power elements?
-		if line, ok := node.Element.(*power.PowerLine); ok {
-			return line.GetSnapNodeElement(node.SnapNodeIdx)
-		}
-
-		if powerPlant, ok := node.Element.(*power.PowerPlant); ok {
-			return powerPlant.GetSnapElement()
-		}
-
-		panic(fmt.Sprintf("We've snapped to a node that isn't a power grid element: %v\n", node))
+		// if line, ok := node.Element.(*power.PowerLine); ok {
+		// 	return line.GetSnapNodeElement(node.SnapNodeIdx)
+		// }
+		//
+		// if powerPlant, ok := node.Element.(*power.PowerPlant); ok {
+		// 	return powerPlant.GetSnapElement()
+		// }
+		//
+		// panic(fmt.Sprintf("We've snapped to a node that isn't a power grid element: %v\n", node))
 	}
 
 	// No grid element association.

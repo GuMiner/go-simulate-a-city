@@ -10,7 +10,7 @@ type EditState struct {
 
 	hasFirstNode     bool
 	firstNode        mgl32.Vec2
-	firstNodeElement int
+	firstNodeElement int64
 }
 
 func NewEditState() *EditState {

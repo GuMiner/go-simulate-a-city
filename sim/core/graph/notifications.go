@@ -11,11 +11,11 @@ const (
 type NodeEdit struct {
 	EditType EditType
 
-	NodeIdx int
+	NodeIdx int64
 	Data    interface{}
 }
 
-func NewNodeEdit(editType EditType, data interface{}, nodeIdx int) NodeEdit {
+func NewNodeEdit(editType EditType, data interface{}, nodeIdx int64) NodeEdit {
 	return NodeEdit{
 		EditType: editType,
 		Data:     data}
@@ -25,19 +25,21 @@ type ConnectionEdit struct {
 	EditType EditType
 	Data     interface{}
 
-	FirstNodeIdx   int
-	SecondNodeIdx  int
+	ConnectionIdx  int64
+	FirstNodeIdx   int64
+	SecondNodeIdx  int64
 	ConnectionData interface{}
 }
 
 func NewConnectionEdit(
 	editType EditType,
 	data interface{},
-	firstNodeIdx, secondNodeIdx int,
+	connectionIdx, firstNodeIdx, secondNodeIdx int64,
 	connectionData interface{}) ConnectionEdit {
 	return ConnectionEdit{
 		EditType:       editType,
 		Data:           data,
+		ConnectionIdx:  connectionIdx,
 		FirstNodeIdx:   firstNodeIdx,
 		SecondNodeIdx:  secondNodeIdx,
 		ConnectionData: connectionData}
