@@ -4,7 +4,7 @@ type Sortable interface {
 	GetDistance() float32
 }
 
-// Defines a self-sorting array
+// Defines a self-sorting array (ascending order)
 type SortableArray struct {
 	maxSize int
 	Items   []Sortable
@@ -34,7 +34,7 @@ func (s *SortableArray) Add(item Sortable) {
 	itemLen := len(s.Items)
 	addedItem := false
 	for currentIndex := len(s.Items); currentIndex > 0; currentIndex-- {
-		if s.Items[currentIndex-1].GetDistance() < item.GetDistance() {
+		if s.Items[currentIndex-1].GetDistance() > item.GetDistance() {
 			s.moveItemDown(currentIndex - 1)
 			s.Items[currentIndex-1] = item
 			addedItem = true
