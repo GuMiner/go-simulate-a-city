@@ -5,7 +5,7 @@ package finder
 type ItemType int
 
 const (
-	PowerLine ItemType = iota
-	PowerPlant
+	PowerTerminus ItemType = iota
 	RoadLine
+	RoadTerminus
 )

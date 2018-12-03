@@ -36,6 +36,7 @@ func (e *ElementFinder) run() {
 			e.elements[newElement.Type][newElement.Id] = newElement
 		case search := <-e.KNearestSearchChannel:
 			search.Results <- e.KNearest(search)
+			close(search.Results)
 		}
 	}
 }
@@ -56,8 +57,9 @@ func (e *ElementFinder) KNearest(search KNearestNodesQuery) []*NodeWithDistance 
 	}
 
 	resultSet := make([]*NodeWithDistance, len(nodes.Items))
-	for _, item := range nodes.Items {
-		resultSet = append(resultSet, item.(*NodeWithDistance))
+	for idx, item := range nodes.Items {
+		resultSet[idx] = item.(*NodeWithDistance)
 	}
+
 	return resultSet
 }

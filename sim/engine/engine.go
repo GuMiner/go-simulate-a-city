@@ -65,7 +65,7 @@ func NewEngine() *Engine {
 	mailroom.NewRegionRegChannel = engine.terrainMap.NewRegionRegChannel
 
 	engine.elementFinder = finder.NewElementFinder()
-	engine.powerGrid = power.NewPowerGrid()
+	engine.powerGrid = power.NewPowerGrid(engine.elementFinder)
 	engine.roadGrid = road.NewRoadGrid()
 	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(engine.roadGrid)
 	engine.isMousePressed = false

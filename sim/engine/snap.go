@@ -36,12 +36,12 @@ func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 		editorMode:            editorengdto.Select,
 		editorAddMode:         editorengdto.PowerPlant,
 		editorDrawMode:        editorengdto.TerrainFlatten,
-		editorModeChannel:     make(chan editorengdto.EditorMode),
-		editorAddModeChannel:  make(chan editorengdto.EditorAddMode),
-		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
 		snapToGrid:            false,
 		snapToAngle:           false,
 		snapToElements:        true,
+		editorModeChannel:     make(chan editorengdto.EditorMode),
+		editorAddModeChannel:  make(chan editorengdto.EditorAddMode),
+		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
 		snapSettingsChannel:   make(chan editorengdto.SnapSetting)}
 
 	mailroom.BoardPosChangeRegChannel <- s.mouseBoardPosChannel
@@ -55,12 +55,14 @@ func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 }
 
 func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
+	displayedSnappedNodes := make([]mgl32.Vec2, 0)
+
 	if s.snapToElements && s.editorMode == editorengdto.Add &&
 		s.editorAddMode == editorengdto.PowerLine || s.editorAddMode == editorengdto.RoadLine {
 
 		itemType := finder.RoadLine
 		if s.editorAddMode == editorengdto.PowerLine {
-			itemType = finder.PowerLine
+			itemType = finder.PowerTerminus
 		}
 
 		results := make(chan []*finder.NodeWithDistance)
@@ -68,7 +70,9 @@ func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 		elements := <-results
 		for _, elem := range elements {
 			if elem.Distance < config.Config.Draw.MinSnapNodeDistance {
-				// TODO: we snapped to this node. Send this out for rendering / systemic use (TODO)
+				// TODO send to system to handle snapping
+
+				displayedSnappedNodes = append(displayedSnappedNodes, elem.Pos)
 			}
 		}
 	}
@@ -77,10 +81,13 @@ func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 		snapGridResolution := float32(config.Config.Snap.SnapGridResolution)
 		offsetBoardPos := boardPos.Add(mgl32.Vec2{snapGridResolution / 2, snapGridResolution / 2})
 		snappedIntPosition := commonMath.IntVec2{int(offsetBoardPos.X() / snapGridResolution), int(offsetBoardPos.Y() / snapGridResolution)}
-		_ = mgl32.Vec2{float32(snappedIntPosition.X()), float32(snappedIntPosition.Y())}.Mul(snapGridResolution)
+		elementPos := mgl32.Vec2{float32(snappedIntPosition.X()), float32(snappedIntPosition.Y())}.Mul(snapGridResolution)
 
-		// TODO: Return the singular snapped grid pos.
+		displayedSnappedNodes = append(displayedSnappedNodes, elementPos)
 	}
+
+	// Send to be rendered.
+	mailroom.SnappedNodesUpdateChannel <- displayedSnappedNodes
 }
 
 func (s *Snap) run() {

@@ -152,7 +152,7 @@ func (e *EditorEngine) checkEditorToggles(key glfw.Key) bool {
 		return true
 	case input.GetKeyCode(input.SnapToElementsKey):
 		state := !e.engineState.SnapSettings[editorengdto.SnapToElements]
-		e.engineState.SnapSettings[editorengdto.SnapToAngle] = state
+		e.engineState.SnapSettings[editorengdto.SnapToElements] = state
 
 		fmt.Printf("Toggled snap-to-elements to %v.\n", state)
 

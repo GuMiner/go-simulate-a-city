@@ -43,3 +43,6 @@ var DeletePowerPlantChannel chan int64
 // Road Lines
 var NewRoadLineChannel chan geometry.IdLine
 var DeleteRoadLineChannel chan int64
+
+// Snap nodes
+var SnappedNodesUpdateChannel chan []mgl32.Vec2

@@ -1,17 +1,21 @@
 package finder
 
 import (
-	"go-simulate-a-city/common/commonmath"
-
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 // Defines findeable items
 type Element struct {
-	Id      int64
-	Type    ItemType
-	Nodes   []mgl32.Vec2
-	Regions []commonMath.Region
+	Id    int64
+	Type  ItemType
+	Nodes []mgl32.Vec2
+}
+
+func NewElement(id int64, itemType ItemType, nodes []mgl32.Vec2) Element {
+	return Element{
+		Id:    id,
+		Type:  itemType,
+		Nodes: nodes}
 }
 
 // Defines a query to return the KNearestNodes of the given input types

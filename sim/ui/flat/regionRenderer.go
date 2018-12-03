@@ -59,7 +59,13 @@ func (r *RegionRenderer) drainInputChannels() {
 			delete(r.regions, deletionId)
 			r.newInput = true
 		case idRegion := <-r.NewRegionChannel:
-			r.regions[idRegion.Id] = idRegion.Region
+			if idRegion.Id == -1 {
+				// Special case -- if someone sends an invalid ID, we reset EVERYTHING
+				r.regions = make(map[int64]commonMath.Region)
+			} else {
+				r.regions[idRegion.Id] = idRegion.Region
+			}
+
 			r.newInput = true
 		default:
 			inputLeft = false

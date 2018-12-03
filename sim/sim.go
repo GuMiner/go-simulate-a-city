@@ -107,6 +107,9 @@ func main() {
 	mailroom.NewRoadLineChannel = roadGridRenderer.Renderer.NewLineChannel
 	mailroom.DeleteRoadLineChannel = roadGridRenderer.Renderer.DeleteLineChannel
 
+	snapRenderer := flat.NewSnapRenderer()
+	mailroom.SnappedNodesUpdateChannel = snapRenderer.SnappedNodesUpdateChannel
+
 	terrainOverlayManager := flat.NewTerrainOverlayManager()
 	defer terrainOverlayManager.Delete()
 
@@ -149,6 +152,7 @@ func main() {
 		ui.Ui.RegionProgram.PreRender()
 
 		powerGridRenderer.PlantRenderer.Render()
+		snapRenderer.NodeRenderer.Render()
 		// for _, hypotheticalRegion := range engine.Hypotheticals.Regions {
 		// 	mappedRegion := camera.MapEngineRegionToScreen(&hypotheticalRegion.Region)
 		// 	ui.Ui.RegionProgram.Render(mappedRegion, hypotheticalRegion.Color)
@@ -161,10 +165,7 @@ func main() {
 		// }
 
 		roadGridRenderer.Renderer.Render()
-
 		powerGridRenderer.LineRenderer.Render()
-
-		// flat.RenderSnapNodes(engine.GetSnapElements(), camera, ui.Ui.RegionProgram)
 	}
 
 	RenderLoop(update, render, window)

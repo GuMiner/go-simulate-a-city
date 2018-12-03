@@ -5,17 +5,20 @@ import (
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/graph"
 	"go-simulate-a-city/sim/core/mailroom"
+	"go-simulate-a-city/sim/engine/finder"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 type PowerGrid struct {
-	grid *graph.Graph
+	finder *finder.ElementFinder
+	grid   *graph.Graph
 }
 
-func NewPowerGrid() *PowerGrid {
+func NewPowerGrid(finder *finder.ElementFinder) *PowerGrid {
 	grid := PowerGrid{
-		grid: graph.NewGraph()}
+		finder: finder,
+		grid:   graph.NewGraph()}
 	return &grid
 }
 
@@ -33,6 +36,7 @@ func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSi
 	gridId := p.grid.AddNode(&plant)
 	fmt.Printf("Added power plant '%v'.\n", plant)
 
+	p.finder.AddElementChannel <- finder.NewElement(gridId, finder.PowerTerminus, []mgl32.Vec2{pos})
 	mailroom.NewPowerPlantChannel <- geometry.NewIdRegion(gridId, *plant.GetRegion())
 
 	return &plant
@@ -58,10 +62,12 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 
 	if startNode == -1 {
 		startNode = p.grid.AddNode(&PowerTerminus{location: start})
+		p.finder.AddElementChannel <- finder.NewElement(startNode, finder.PowerTerminus, []mgl32.Vec2{start})
 	}
 
 	if endNode == -1 {
 		endNode = p.grid.AddNode(&PowerTerminus{location: end})
+		p.finder.AddElementChannel <- finder.NewElement(endNode, finder.PowerTerminus, []mgl32.Vec2{end})
 	}
 
 	connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
