@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"fmt"
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/mailroom"
@@ -145,12 +144,10 @@ func (e *Engine) addPowerPlantIfValid() {
 func (e *Engine) updatePowerLineState() {
 	if !e.powerLineState.hasFirstNode {
 		e.powerLineState.firstNodeElement, e.powerLineState.firstNode = e.getEffectiveElement()
-		fmt.Printf("%v, %v \n", e.powerLineState.firstNodeElement, e.powerLineState.firstNode)
 		e.powerLineState.hasFirstNode = true
 	} else {
 		// TODO: Configurable capacity
 		powerLineEndId, powerLineEnd := e.getEffectiveElement()
-		fmt.Printf("%v, %v \n", powerLineEndId, powerLineEnd)
 		_, lineId, endLineId := e.powerGrid.AddLine(e.powerLineState.firstNode,
 			powerLineEnd, 1000,
 			e.powerLineState.firstNodeElement, powerLineEndId)

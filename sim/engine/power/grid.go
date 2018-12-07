@@ -58,6 +58,7 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 			return -1, -1, -1
 		} else {
 			mailroom.NewPowerLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
+			return startNode, connectionStatus.Id, endNode
 		}
 	}
 
