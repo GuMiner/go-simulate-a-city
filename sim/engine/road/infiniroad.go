@@ -119,10 +119,8 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	// TODO: Default to highway capacity for the infinte road.
 	// TODO: This should be a lot smarter and follow contours
 	roadId := int64(-1)
-	roadId, westNodeId, eastNodeId = i.grid.AddLine(start, end, 1000, westNodeId, eastNodeId)
+	westNodeId, roadId, eastNodeId = i.grid.AddLine(start, end, 1000, westNodeId, eastNodeId)
 	fmt.Printf("  Generated new infinite-road element for [%v, %v]: %v\n", region.X(), region.Y(), roadId)
-
-	// i.finder.Add(road) TODO implement finder element addition
 
 	// Update our caches so we don't infinitely generate infinite roads.
 	i.markRoadAsGenerated(region)

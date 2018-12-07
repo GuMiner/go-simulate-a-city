@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"fmt"
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/mailroom"
@@ -134,7 +135,7 @@ func (e *Engine) addPowerPlantIfValid() {
 			plantType := power.GetPlantType(editorengdto.Item1) // TODO: EngineState.ItemSubSelection)
 			plantSize := power.Small                            // TODO: Configurable
 
-			_ = e.powerGrid.Add(e.getEffectivePosition(), plantType, plantSize)
+			_ = e.powerGrid.Add(e.lastBoardPos, plantType, plantSize) // get effective position
 			// e.elementFinder.Add(element)
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Power Plant", power.GetPlantCost(plantType))
 		}
@@ -142,96 +143,61 @@ func (e *Engine) addPowerPlantIfValid() {
 }
 
 func (e *Engine) updatePowerLineState() {
-	// If this is the first press, we associate it with the first location of the powerline.
 	if !e.powerLineState.hasFirstNode {
-		e.powerLineState.firstNode = e.getEffectivePosition()
+		e.powerLineState.firstNodeElement, e.powerLineState.firstNode = e.getEffectiveElement()
+		fmt.Printf("%v, %v \n", e.powerLineState.firstNodeElement, e.powerLineState.firstNode)
 		e.powerLineState.hasFirstNode = true
-		e.powerLineState.firstNodeElement = e.getEffectivePowerGridElement()
 	} else {
 		// TODO: Configurable capacity
-		powerLineEnd := e.getEffectivePosition()
-		lineId := e.powerGrid.AddLine(e.powerLineState.firstNode,
+		powerLineEndId, powerLineEnd := e.getEffectiveElement()
+		fmt.Printf("%v, %v \n", powerLineEndId, powerLineEnd)
+		_, lineId, endLineId := e.powerGrid.AddLine(e.powerLineState.firstNode,
 			powerLineEnd, 1000,
-			e.powerLineState.firstNodeElement, e.getEffectivePowerGridElement())
+			e.powerLineState.firstNodeElement, powerLineEndId)
 		if lineId != -1 {
-			// e.elementFinder.Add(line)
 			powerLineCost := e.powerLineState.firstNode.Sub(powerLineEnd).Len() * config.Config.Power.PowerLineCost
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Power Line", powerLineCost)
 
 			e.powerLineState.firstNode = powerLineEnd
-			e.powerLineState.firstNodeElement = lineId
+			e.powerLineState.firstNodeElement = endLineId
 		}
 	}
 }
 
 func (e *Engine) updateRoadLineState() {
-	// TODO: Deduplicate
-	// If this is the first press, we associate it with the first location of the powerline.
 	if !e.roadLineState.hasFirstNode {
-		e.roadLineState.firstNode = e.getEffectivePosition()
+		e.roadLineState.firstNodeElement, e.roadLineState.firstNode = e.getEffectiveElement()
 		e.roadLineState.hasFirstNode = true
-		e.roadLineState.firstNodeElement = int64(e.getEffectiveRoadGridElement())
 	} else {
 		// TODO: Configurable capacity
-		roadLineEnd := e.getEffectivePosition()
-		lineId, _, _ := e.roadGrid.AddLine(e.roadLineState.firstNode,
+		roadLineEndId, roadLineEnd := e.getEffectiveElement()
+		_, lineId, endLineId := e.roadGrid.AddLine(e.roadLineState.firstNode,
 			roadLineEnd, 1000,
-			e.roadLineState.firstNodeElement, int64(e.getEffectiveRoadGridElement()))
+			e.roadLineState.firstNodeElement, roadLineEndId)
 		if lineId != -1 {
-			// e.elementFinder.Add(line)
 			roadLineCost := e.roadLineState.firstNode.Sub(roadLineEnd).Len() * 3000 // TODO: Configurable
 			core.CoreFinances.TransactionChannel <- dto.NewTransaction("Road", roadLineCost)
 
 			e.roadLineState.firstNode = roadLineEnd
-			e.roadLineState.firstNodeElement = lineId
+			e.roadLineState.firstNodeElement = endLineId
 		}
 	}
 }
 
-func (e *Engine) getEffectivePosition() mgl32.Vec2 {
-	// if e.snapElements.snappedNode != nil {
-	// 	return e.snapElements.snappedNode.Element.GetSnapNodes()[e.snapElements.snappedNode.SnapNodeIdx]
-	// }
-	//
-	// if e.snapElements.snappedGridPos != nil {
-	// 	return *e.snapElements.snappedGridPos
-	// }
+// Gets an effective element, returning the ID (if any) and position.
+func (e *Engine) getEffectiveElement() (int64, mgl32.Vec2) {
+	query := SnapQuery{
+		Result: make(chan SnapResult)}
 
-	return e.lastBoardPos
-}
+	e.snap.SnapQueryChannel <- query
+	snapResult := <-query.Result
 
-// TODO: Rename, element is too generic...
-func (e *Engine) getEffectivePowerGridElement() int64 {
-	// node := e.snapElements.snappedNode
-	// if node != nil {
-	// 	// TODO: New interface for power elements?
-	// 	// if line, ok := node.Element.(*power.PowerLine); ok {
-	// 	// 	return line.GetSnapNodeElement(node.SnapNodeIdx)
-	// 	// }
-	// 	//
-	// 	// if powerPlant, ok := node.Element.(*power.PowerPlant); ok {
-	// 	// 	return powerPlant.GetSnapElement()
-	// 	// }
-	// 	//
-	// 	// panic(fmt.Sprintf("We've snapped to a node that isn't a power grid element: %v\n", node))
-	// }
+	if !snapResult.IsItemSnapped {
+		snapResult.Id = -1
+		snapResult.Position = e.lastBoardPos
+	}
 
-	// No grid element association.
-	return -1
-}
-
-func (e *Engine) getEffectiveRoadGridElement() int {
-	// node := nil // e.snapElements.snappedNode
-	// if node != nil {
-	// 	if line, ok := node.Element.(*road.RoadLine); ok {
-	// 		return line.GetSnapNodeElement(node.SnapNodeIdx)
-	// 	}
-	//
-	// 	panic(fmt.Sprintf("We've snapped to a node that isn't a road element: %v\n", node))
-	// }
-
-	// No grid element association.
-	return -1
+	return snapResult.Id, snapResult.Position
 }
 
 func (e *Engine) applyStepDraw(stepAmount float32, engineState *editorEngine.State) {

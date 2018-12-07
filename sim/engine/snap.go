@@ -11,6 +11,10 @@ import (
 )
 
 type Snap struct {
+	snappedToNode    bool
+	lastSnapPosition mgl32.Vec2
+	lastSnapId       int64
+
 	elementFinder *finder.ElementFinder
 
 	mouseBoardPosChannel chan mgl32.Vec2
@@ -27,10 +31,25 @@ type Snap struct {
 	editorAddModeChannel  chan editorengdto.EditorAddMode
 	editorDrawModeChannel chan editorengdto.EditorDrawMode
 	snapSettingsChannel   chan editorengdto.SnapSetting
+
+	SnapQueryChannel chan SnapQuery
+}
+
+type SnapQuery struct {
+	Result chan SnapResult
+}
+
+type SnapResult struct {
+	IsItemSnapped bool
+	Id            int64
+	Position      mgl32.Vec2
 }
 
 func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 	s := Snap{
+		snappedToNode:         false,
+		lastSnapId:            -1,
+		lastSnapPosition:      mgl32.Vec2{0, 0},
 		elementFinder:         elementFinder,
 		mouseBoardPosChannel:  make(chan mgl32.Vec2, 10),
 		editorMode:            editorengdto.Select,
@@ -42,7 +61,8 @@ func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 		editorModeChannel:     make(chan editorengdto.EditorMode),
 		editorAddModeChannel:  make(chan editorengdto.EditorAddMode),
 		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
-		snapSettingsChannel:   make(chan editorengdto.SnapSetting)}
+		snapSettingsChannel:   make(chan editorengdto.SnapSetting),
+		SnapQueryChannel:      make(chan SnapQuery, 3)}
 
 	mailroom.BoardPosChangeRegChannel <- s.mouseBoardPosChannel
 	mailroom.EngineModeRegChannel <- s.editorModeChannel
@@ -57,6 +77,7 @@ func NewSnap(elementFinder *finder.ElementFinder) *Snap {
 func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 	displayedSnappedNodes := make([]mgl32.Vec2, 0)
 
+	s.snappedToNode = false
 	if s.snapToElements && s.editorMode == editorengdto.Add &&
 		s.editorAddMode == editorengdto.PowerLine || s.editorAddMode == editorengdto.RoadLine {
 
@@ -70,7 +91,11 @@ func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 		elements := <-results
 		for _, elem := range elements {
 			if elem.Distance < config.Config.Draw.MinSnapNodeDistance {
-				// TODO send to system to handle snapping
+				if !s.snappedToNode {
+					s.lastSnapId = elem.Id
+					s.lastSnapPosition = elem.Pos
+					s.snappedToNode = true
+				}
 
 				displayedSnappedNodes = append(displayedSnappedNodes, elem.Pos)
 			}
@@ -84,6 +109,11 @@ func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 		elementPos := mgl32.Vec2{float32(snappedIntPosition.X()), float32(snappedIntPosition.Y())}.Mul(snapGridResolution)
 
 		displayedSnappedNodes = append(displayedSnappedNodes, elementPos)
+		if !s.snappedToNode {
+			s.lastSnapId = -1
+			s.lastSnapPosition = elementPos
+			s.snappedToNode = true
+		}
 	}
 
 	// Send to be rendered.
@@ -98,6 +128,7 @@ func (s *Snap) run() {
 			s.computeSnaps(boardPos)
 		case s.editorMode = <-s.editorModeChannel:
 		case s.editorAddMode = <-s.editorAddModeChannel:
+			s.snappedToNode = false
 		case s.editorDrawMode = <-s.editorDrawModeChannel:
 		case snapSetting := <-s.snapSettingsChannel:
 			switch snapSetting.Setting {
@@ -109,6 +140,12 @@ func (s *Snap) run() {
 				s.snapToElements = snapSetting.State
 			default:
 			}
+		case query := <-s.SnapQueryChannel:
+			query.Result <- SnapResult{
+				IsItemSnapped: s.snappedToNode,
+				Id:            s.lastSnapId,
+				Position:      s.lastSnapPosition}
+			close(query.Result)
 		}
 	}
 }

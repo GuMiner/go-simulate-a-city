@@ -43,18 +43,19 @@ func (p *PowerGrid) Add(pos mgl32.Vec2, plantType string, plantSize PowerPlantSi
 }
 
 // Adds a powerline. For both startNode and endNode, if -1 generates a new grid node, else uses an existing node.
-func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int64) int64 {
+// Returns the start ID, line ID, and end ID, in that order.
+func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int64) (int64, int64, int64) {
 	line := PowerLine{capacity: capacity}
 
 	if startNode == endNode && startNode != -1 {
 		fmt.Printf("Powerlines must be between nodes and cannot (for a single line) loop\n")
-		return -1
+		return -1, -1, -1
 	} else if startNode != -1 && endNode != -1 {
 		// This might be a duplicate line.
 		connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
 		if connectionStatus.Status == graph.Exists {
 			fmt.Printf("There already is a line from %v to %v.\n", startNode, endNode)
-			return -1
+			return -1, -1, -1
 		} else {
 			mailroom.NewPowerLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 		}
@@ -73,5 +74,5 @@ func (p *PowerGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, en
 	connectionStatus := p.grid.AddConnection(startNode, endNode, &line)
 	mailroom.NewPowerLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 
-	return connectionStatus.Id
+	return startNode, connectionStatus.Id, endNode
 }

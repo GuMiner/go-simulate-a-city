@@ -51,7 +51,7 @@ func (e *HypotheticalActions) computePowerPlantHypotheticalRegion(n *Engine) {
 		RegionType:  commonMath.SquareRegion,
 		Scale:       float32(size),
 		Orientation: 0,
-		Position:    n.getEffectivePosition()}
+		Position:    n.lastBoardPos} // effective snapped pos
 
 	anyNearbyObjects := false // n.elementFinder.IntersectsWithElement(n.lastBoardPos, region.Scale)
 	var color mgl32.Vec3
@@ -74,14 +74,14 @@ func (e *HypotheticalActions) computePowerLineHypotheticalRegion(n *Engine) {
 					RegionType:  commonMath.CircleRegion,
 					Scale:       40.0, // TODO Make this configurable by reading the editor engine state.
 					Orientation: 0,
-					Position:    n.getEffectivePosition()}})
+					Position:    n.lastBoardPos}}) // effective snapped pos
 	} else {
 		e.Reset()
 		e.Lines = []HypotheticalLine{
 			HypotheticalLine{
 				Color: mgl32.Vec3{1.0, 0.0, 1.0},
 				Line: [2]mgl32.Vec2{
-					n.getEffectivePosition(),
+					n.lastBoardPos, // effective snapped pos
 					n.powerLineState.firstNode}}}
 	}
 }
@@ -96,14 +96,14 @@ func (e *HypotheticalActions) computeRoadLineHypotheticalRegion(n *Engine) {
 					RegionType:  commonMath.CircleRegion,
 					Scale:       40.0, // TODO Make this configurable by reading the editor engine state.
 					Orientation: 0,
-					Position:    n.getEffectivePosition()}})
+					Position:    n.lastBoardPos}}) // effective snapped pos
 	} else {
 		e.Reset()
 		e.Lines = []HypotheticalLine{
 			HypotheticalLine{
 				Color: mgl32.Vec3{1.0, 1.0, 0.0},
 				Line: [2]mgl32.Vec2{
-					n.getEffectivePosition(),
+					n.lastBoardPos, // effective snapped pos
 					n.roadLineState.firstNode}}}
 	}
 }
