@@ -5,6 +5,7 @@ import (
 	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/dto/terraindto"
+	"go-simulate-a-city/sim/engine/core/dto"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
@@ -32,6 +33,9 @@ var EngineAddModeRegChannel chan chan editorengdto.EditorAddMode
 var EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
 var SnapSettingsRegChannel chan chan editorengdto.SnapSetting
 var EngineCancelChannel chan chan bool
+
+// Engine temporal updates
+var CoreTimerRegChannel chan chan dto.Time
 
 // --- Rendering ---
 // Power

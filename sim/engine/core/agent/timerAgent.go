@@ -9,7 +9,6 @@ import (
 //  and a low-level timer suitable for simulation updates
 type Timer struct {
 	registeredChannels []chan dto.Time
-	highResChannels    []chan time.Time
 
 	ControlChannel      chan int
 	RegistrationChannel chan chan dto.Time
@@ -18,7 +17,6 @@ type Timer struct {
 func NewTimer() Timer {
 	timer := Timer{
 		registeredChannels:  make([]chan dto.Time, 0),
-		highResChannels:     make([]chan time.Time, 0),
 		ControlChannel:      make(chan int),
 		RegistrationChannel: make(chan chan dto.Time)}
 

@@ -25,8 +25,26 @@ type InfiniRoadGenerator struct {
 	newRegionChannel chan commonMath.IntVec2
 
 	// Defines if each automatically-generated road has been generated
-	RoadGenerated map[int]map[int]bool
-	RoadNodeEdges map[int]map[int]InfiniRoadNodeEnds
+	RoadGenerated map[int]bool
+	RoadNodeEdges map[int]InfiniRoadNodeEnds
+	WestEdge      int
+	EastEdge      int
+}
+
+func min(a, b int) int {
+	if a > b {
+		return b
+	}
+
+	return a
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+
+	return b
 }
 
 func NewInfiniRoadGenerator(grid *RoadGrid) *InfiniRoadGenerator {
@@ -34,8 +52,10 @@ func NewInfiniRoadGenerator(grid *RoadGrid) *InfiniRoadGenerator {
 		grid:             grid,
 		noise:            opensimplex.NewWithSeed(int64(42)), // TODO: Configurable??
 		newRegionChannel: make(chan commonMath.IntVec2, 3),
-		RoadGenerated:    make(map[int]map[int]bool),
-		RoadNodeEdges:    make(map[int]map[int]InfiniRoadNodeEnds)}
+		RoadGenerated:    make(map[int]bool),
+		RoadNodeEdges:    make(map[int]InfiniRoadNodeEnds),
+		WestEdge:         0,
+		EastEdge:         0}
 
 	mailroom.NewRegionRegChannel <- infiniRoadGenerator.newRegionChannel
 
@@ -53,39 +73,33 @@ func (i *InfiniRoadGenerator) run() {
 	}
 }
 
-func (i *InfiniRoadGenerator) markRoadAsGenerated(region commonMath.IntVec2) {
-	i.RoadGenerated[region.X()][region.Y()] = true
+func (i *InfiniRoadGenerator) markRoadAsGenerated(regionX int) {
+	i.RoadGenerated[regionX] = true
 }
 
-func (i *InfiniRoadGenerator) addMapSliceIfMissing(x int) {
-	if _, ok := i.RoadGenerated[x]; !ok {
-		i.RoadGenerated[x] = make(map[int]bool)
-	}
-}
-
-func (i *InfiniRoadGenerator) getNodeId(region commonMath.IntVec2, offsetX int) int64 {
-	effectiveRegion := commonMath.IntVec2{region.X() + offsetX, region.Y()}
+func (i *InfiniRoadGenerator) getNodeId(regionX, offsetX int) int64 {
+	effectiveRegion := regionX + offsetX
 	roadEndIndex := -offsetX
 	roadEndIndex = commonMath.MaxInt(0, roadEndIndex)
 
-	i.addMapSliceIfMissing(effectiveRegion.X())
-	if i.RoadGenerated[effectiveRegion.X()][effectiveRegion.Y()] {
-		return i.RoadNodeEdges[effectiveRegion.X()][effectiveRegion.Y()].RoadEnds[roadEndIndex]
+	if i.RoadGenerated[effectiveRegion] {
+		return i.RoadNodeEdges[effectiveRegion].RoadEnds[roadEndIndex]
 	}
 
 	return -1
 }
 
 func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
-	i.addMapSliceIfMissing(region.X())
 	if region.Y() != 0 {
-		i.markRoadAsGenerated(region)
 		return
 	}
 
-	westNodeId := i.getNodeId(region, -1)
-	eastNodeId := i.getNodeId(region, 1)
-	fmt.Printf("%v, %v, %v, %v\n", region.X(), region.Y(), westNodeId, eastNodeId)
+	i.WestEdge = min(region.X()-1, i.WestEdge)
+	i.EastEdge = max(region.X()+1, i.EastEdge)
+	fmt.Printf("Max infinite road bounds: %v, %v\n", i.WestEdge, i.EastEdge)
+
+	westNodeId := i.getNodeId(region.X(), -1)
+	eastNodeId := i.getNodeId(region.X(), 1)
 
 	fRegionSize := float32(config.Config.Terrain.RegionSize)
 	halfYHeight := fRegionSize / 2
@@ -123,11 +137,7 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	fmt.Printf("  Generated new infinite-road element for [%v, %v]: %v\n", region.X(), region.Y(), roadId)
 
 	// Update our caches so we don't infinitely generate infinite roads.
-	i.markRoadAsGenerated(region)
-	if _, ok := i.RoadNodeEdges[region.X()]; !ok {
-		i.RoadNodeEdges[region.X()] = make(map[int]InfiniRoadNodeEnds)
-	}
+	i.markRoadAsGenerated(region.X())
 
-	i.RoadNodeEdges[region.X()][region.Y()] = InfiniRoadNodeEnds{
-		RoadEnds: [2]int64{westNodeId, eastNodeId}}
+	i.RoadNodeEdges[region.X()] = InfiniRoadNodeEnds{RoadEnds: [2]int64{westNodeId, eastNodeId}}
 }

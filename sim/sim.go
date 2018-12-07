@@ -84,6 +84,7 @@ func main() {
 	defer ui.Delete()
 
 	core.Init()
+
 	camera := flat.NewCamera(
 		input.InputBuffer.MouseMoveRegChannel,
 		input.InputBuffer.MouseScrollRegChannel,
