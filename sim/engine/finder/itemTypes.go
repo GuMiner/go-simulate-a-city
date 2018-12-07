@@ -6,6 +6,5 @@ type ItemType int
 
 const (
 	PowerTerminus ItemType = iota
-	RoadLine
 	RoadTerminus
 )

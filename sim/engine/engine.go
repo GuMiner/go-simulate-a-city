@@ -36,6 +36,7 @@ type Engine struct {
 	editorModeChannel     chan editorengdto.EditorMode
 	editorAddModeChannel  chan editorengdto.EditorAddMode
 	editorDrawModeChannel chan editorengdto.EditorDrawMode
+	editorCancelChannel   chan bool
 
 	Hypotheticals HypotheticalActions
 
@@ -52,9 +53,10 @@ func NewEngine() *Engine {
 		editorMode:            editorengdto.Select,
 		editorAddMode:         editorengdto.PowerPlant,
 		editorDrawMode:        editorengdto.TerrainFlatten,
-		editorModeChannel:     make(chan editorengdto.EditorMode),
-		editorAddModeChannel:  make(chan editorengdto.EditorAddMode),
-		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode),
+		editorModeChannel:     make(chan editorengdto.EditorMode, 3),
+		editorAddModeChannel:  make(chan editorengdto.EditorAddMode, 3),
+		editorDrawModeChannel: make(chan editorengdto.EditorDrawMode, 3),
+		editorCancelChannel:   make(chan bool, 3),
 		mouseBoardPosChannel:  make(chan mgl32.Vec2, 10),
 		mousePressChannel:     make(chan glfw.MouseButton, 10),
 		mouseReleaseChannel:   make(chan glfw.MouseButton, 10),
@@ -66,7 +68,7 @@ func NewEngine() *Engine {
 
 	engine.elementFinder = finder.NewElementFinder()
 	engine.powerGrid = power.NewPowerGrid(engine.elementFinder)
-	engine.roadGrid = road.NewRoadGrid()
+	engine.roadGrid = road.NewRoadGrid(engine.elementFinder)
 	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(engine.roadGrid)
 	engine.isMousePressed = false
 	engine.powerLineState = NewEditState()
@@ -81,6 +83,7 @@ func NewEngine() *Engine {
 	mailroom.EngineModeRegChannel <- engine.editorModeChannel
 	mailroom.EngineAddModeRegChannel <- engine.editorAddModeChannel
 	mailroom.EngineDrawModeRegChannel <- engine.editorDrawModeChannel
+	mailroom.EngineCancelChannel <- engine.editorCancelChannel
 
 	go engine.run()
 	return &engine
@@ -97,7 +100,9 @@ func (e *Engine) run() {
 		case e.editorMode = <-e.editorModeChannel:
 		case e.editorAddMode = <-e.editorAddModeChannel:
 		case e.editorDrawMode = <-e.editorDrawModeChannel:
-
+		case _ = <-e.editorCancelChannel:
+			e.powerLineState.Reset()
+			e.roadLineState.Reset()
 		case _ = <-e.mousePressChannel:
 			e.isMousePressed = true
 
@@ -227,17 +232,6 @@ func (e *Engine) getEffectiveRoadGridElement() int {
 
 	// No grid element association.
 	return -1
-}
-
-// Cancels the state of any multi-step operation, resetting it back to the start.
-func (e *Engine) CancelState(engineState editorEngine.State) {
-	// if e.powerLineState.InPowerLineState(&engineState) {
-	// 	e.powerLineState.Reset()
-	// }
-	//
-	// if e.roadLineState.InRoadLineState(&engineState) {
-	// 	e.roadLineState.Reset()
-	// }
 }
 
 func (e *Engine) applyStepDraw(stepAmount float32, engineState *editorEngine.State) {

@@ -22,6 +22,7 @@ type EditorEngine struct {
 	engineAddModeRegs  []chan editorengdto.EditorAddMode
 	engineDrawModeRegs []chan editorengdto.EditorDrawMode
 	snapSettingRegs    []chan editorengdto.SnapSetting
+	cancellationRegs   []chan bool
 
 	engineState              State
 	keyPressChannel          chan glfw.Key
@@ -29,6 +30,7 @@ type EditorEngine struct {
 	EngineAddModeRegChannel  chan chan editorengdto.EditorAddMode
 	EngineDrawModeRegChannel chan chan editorengdto.EditorDrawMode
 	SnapSettingsRegChannel   chan chan editorengdto.SnapSetting
+	CancellationRegChannel   chan chan bool
 	ControlChannel           chan int
 }
 
@@ -45,10 +47,12 @@ func NewEditorEngine(keyPressRegChannel chan chan glfw.Key) *EditorEngine {
 		engineAddModeRegs:        make([]chan editorengdto.EditorAddMode, 0),
 		engineDrawModeRegs:       make([]chan editorengdto.EditorDrawMode, 0),
 		snapSettingRegs:          make([]chan editorengdto.SnapSetting, 0),
+		cancellationRegs:         make([]chan bool, 0),
 		EngineModeRegChannel:     make(chan chan editorengdto.EditorMode),
 		EngineAddModeRegChannel:  make(chan chan editorengdto.EditorAddMode),
 		EngineDrawModeRegChannel: make(chan chan editorengdto.EditorDrawMode),
 		SnapSettingsRegChannel:   make(chan chan editorengdto.SnapSetting),
+		CancellationRegChannel:   make(chan chan bool),
 		ControlChannel:           make(chan int)}
 
 	engine.engineState.SnapSettings[editorengdto.SnapToGrid] = true
@@ -76,6 +80,9 @@ func (e *EditorEngine) run() {
 		case reg := <-e.SnapSettingsRegChannel:
 			e.snapSettingRegs = append(e.snapSettingRegs, reg)
 			break
+		case reg := <-e.CancellationRegChannel:
+			e.cancellationRegs = append(e.cancellationRegs, reg)
+			break
 		case key := <-e.keyPressChannel:
 			// updated => used to avoid duplicate checks.
 			updated := e.checkEditorMode(key)
@@ -85,6 +92,12 @@ func (e *EditorEngine) run() {
 				updated = updated || e.checkAddModeSubSelections(key)
 			} else if e.engineState.Mode == editorengdto.Draw {
 				updated = updated || e.checkDrawModeSubSelections(key)
+			}
+
+			if key == input.GetKeyCode(input.CancelKey) {
+				for _, reg := range e.cancellationRegs {
+					reg <- true
+				}
 			}
 			break
 		case _ = <-e.ControlChannel:

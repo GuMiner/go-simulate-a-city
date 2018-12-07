@@ -60,7 +60,7 @@ func (s *Snap) computeSnaps(boardPos mgl32.Vec2) {
 	if s.snapToElements && s.editorMode == editorengdto.Add &&
 		s.editorAddMode == editorengdto.PowerLine || s.editorAddMode == editorengdto.RoadLine {
 
-		itemType := finder.RoadLine
+		itemType := finder.RoadTerminus
 		if s.editorAddMode == editorengdto.PowerLine {
 			itemType = finder.PowerTerminus
 		}

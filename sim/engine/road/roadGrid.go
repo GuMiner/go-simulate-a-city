@@ -5,17 +5,20 @@ import (
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/graph"
 	"go-simulate-a-city/sim/core/mailroom"
+	"go-simulate-a-city/sim/engine/finder"
 
 	"github.com/go-gl/mathgl/mgl32"
 )
 
 type RoadGrid struct {
-	grid *graph.Graph
+	finder *finder.ElementFinder
+	grid   *graph.Graph
 }
 
-func NewRoadGrid() *RoadGrid {
+func NewRoadGrid(finder *finder.ElementFinder) *RoadGrid {
 	grid := RoadGrid{
-		grid: graph.NewGraph()}
+		finder: finder,
+		grid:   graph.NewGraph()}
 	return &grid
 }
 
@@ -39,10 +42,12 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 
 	if startNode == -1 {
 		startNode = p.grid.AddNode(&RoadTerminus{location: start})
+		p.finder.AddElementChannel <- finder.NewElement(startNode, finder.RoadTerminus, []mgl32.Vec2{start})
 	}
 
 	if endNode == -1 {
 		endNode = p.grid.AddNode(&RoadTerminus{location: end})
+		p.finder.AddElementChannel <- finder.NewElement(endNode, finder.RoadTerminus, []mgl32.Vec2{end})
 	}
 
 	connectionStatus := p.grid.AddConnection(startNode, endNode, &line)

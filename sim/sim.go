@@ -76,6 +76,7 @@ func main() {
 	mailroom.EngineAddModeRegChannel = editorEngine.EngineAddModeRegChannel
 	mailroom.EngineDrawModeRegChannel = editorEngine.EngineDrawModeRegChannel
 	mailroom.SnapSettingsRegChannel = editorEngine.SnapSettingsRegChannel
+	mailroom.EngineCancelChannel = editorEngine.CancellationRegChannel
 
 	ui.Init(window)
 	customCursors := ui.NewCustomCursors()
@@ -130,10 +131,6 @@ func main() {
 		camera.StepUpdate(frameTime)
 		customCursors.Update(window)
 
-		//
-		// if input.IsTyped(input.CancelKey) {
-		// 	engine.CancelState(editorEngine.EngineState)
-		// }
 		//
 		// if input.IsTyped(input.PauseKey) {
 		// 	paused = !paused
