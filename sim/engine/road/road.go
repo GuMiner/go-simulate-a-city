@@ -47,14 +47,12 @@ type RoadLine struct {
 	highToLowTraffic map[int64]progressingVehicle
 
 	lowTerminus           int64
-	lowPos                mgl32.Vec2
 	lowTerminusAddChannel chan VehicleAddition
 
 	highTerminus           int64
-	highPos                mgl32.Vec2
 	highTerminusAddChannel chan VehicleAddition
 
-	timerUpdateChannel chan dto.Time
+	TimerUpdateChannel chan dto.Time
 	AddVehicleChannel  chan VehicleAddition
 	ControlChannel     chan int
 }
@@ -64,11 +62,9 @@ func NewRoadLine(capacity int64) *RoadLine {
 		capacity:           capacity,
 		lowToHighTraffic:   make(map[int64]progressingVehicle),
 		highToLowTraffic:   make(map[int64]progressingVehicle),
-		timerUpdateChannel: make(chan dto.Time, 3),
+		TimerUpdateChannel: make(chan dto.Time, 3),
 		AddVehicleChannel:  make(chan VehicleAddition, 3),
 		ControlChannel:     make(chan int)}
-
-	//mailroom.CoreTimerRegChannel <- roadLine.timerUpdateChannel
 
 	return &roadLine
 }
@@ -88,7 +84,7 @@ func (r *RoadLine) run() {
 					speed:   addition.Speed,
 					percent: 0.0}
 			}
-		case _ = <-r.timerUpdateChannel:
+		case _ = <-r.TimerUpdateChannel:
 			// Move traffic along the road line
 			// TODO: Silly demo
 			for vehicleId, vehicle := range r.highToLowTraffic {

@@ -36,7 +36,29 @@ func NewRoadGrid(finder *finder.ElementFinder) *RoadGrid {
 	return &grid
 }
 
-// Adds a ;ome tp the road grid, returning the start node ID, line ID, and end node ID, in that order
+func (p *RoadGrid) setupLineConnections(startNode, lineId, endNode int64, line *RoadLine) (int64, int64, int64) {
+	startTerminus := p.grid.GetNode(startNode).(*RoadTerminus)
+	startTerminus.LineAddVehicleChannels[lineId] = line.AddVehicleChannel
+	endTerminus := p.grid.GetNode(endNode).(*RoadTerminus)
+	endTerminus.LineAddVehicleChannels[lineId] = line.AddVehicleChannel
+
+	line.lowTerminus = min64(startNode, endNode)
+	line.highTerminus = max64(startNode, endNode)
+	if startNode > endNode {
+		line.lowTerminusAddChannel = endTerminus.AddVehicleChannel
+		line.highTerminusAddChannel = startTerminus.AddVehicleChannel
+	} else {
+		line.lowTerminusAddChannel = startTerminus.AddVehicleChannel
+		line.highTerminusAddChannel = endTerminus.AddVehicleChannel
+	}
+
+	go line.run()
+	mailroom.CoreTimerRegChannel <- line.TimerUpdateChannel
+
+	return startNode, lineId, endNode
+}
+
+// Adds a line to the road grid, returning the start node ID, line ID, and end node ID, in that order
 func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, endNode int64) (int64, int64, int64) {
 	line := NewRoadLine(capacity)
 
@@ -51,15 +73,13 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 			return -1, -1, -1
 		} else {
 			mailroom.NewRoadLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
-
-			go line.run()
-			return startNode, connectionStatus.Id, endNode
+			return p.setupLineConnections(startNode, connectionStatus.Id, endNode, line)
 		}
 	}
 
 	if startNode == -1 {
 		terminus := NewRoadTerminus(start)
-		//go terminus.run()
+		go terminus.run()
 
 		startNode = p.grid.AddNode(terminus)
 		terminus.Id = startNode
@@ -68,7 +88,8 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 
 	if endNode == -1 {
 		terminus := NewRoadTerminus(end)
-		//go terminus.run()
+		go terminus.run()
+
 		endNode = p.grid.AddNode(terminus)
 		terminus.Id = endNode
 		p.finder.AddElementChannel <- finder.NewElement(endNode, finder.RoadTerminus, []mgl32.Vec2{end})
@@ -77,26 +98,6 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 	connectionStatus := p.grid.AddConnection(startNode, endNode, line)
 	mailroom.NewRoadLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
 
-	// Hookup nodes to termii. TODO, this should use the grid data structure
-	startTerminus := p.grid.GetNode(startNode).(*RoadTerminus)
-	startTerminus.LineAddVehicleChannels[connectionStatus.Id] = line.AddVehicleChannel
-	endTerminus := p.grid.GetNode(endNode).(*RoadTerminus)
-	endTerminus.LineAddVehicleChannels[connectionStatus.Id] = line.AddVehicleChannel
-
-	line.lowTerminus = min64(startNode, endNode)
-	line.highTerminus = max64(startNode, endNode)
-	if startNode > endNode {
-		line.lowTerminusAddChannel = endTerminus.AddVehicleChannel
-		line.highTerminusAddChannel = startTerminus.AddVehicleChannel
-		line.lowPos = endTerminus.location
-		line.highPos = startTerminus.location
-	} else {
-		line.lowTerminusAddChannel = startTerminus.AddVehicleChannel
-		line.highTerminusAddChannel = endTerminus.AddVehicleChannel
-		line.lowPos = startTerminus.location
-		line.highPos = endTerminus.location
-	}
-
-	//go line.run()
-	return startNode, connectionStatus.Id, endNode
+	// Hookup nodes to termii. TODO simplify / use grid more
+	return p.setupLineConnections(startNode, connectionStatus.Id, endNode, line)
 }

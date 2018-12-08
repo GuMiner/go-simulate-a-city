@@ -18,7 +18,7 @@ func NewTimer() Timer {
 	timer := Timer{
 		registeredChannels:  make([]chan dto.Time, 0),
 		ControlChannel:      make(chan int),
-		RegistrationChannel: make(chan chan dto.Time)}
+		RegistrationChannel: make(chan chan dto.Time, 10)}
 
 	ticker := time.NewTicker(100 * time.Millisecond)
 	go timer.run(ticker)
@@ -30,22 +30,19 @@ func (t *Timer) run(ticker *time.Ticker) {
 	time := dto.NewTime()
 
 	for {
-		// Blocks till we advance 100 ms and updates our time.
-		_ = <-ticker.C
-		time.Update(0.1)
-
-		// Send the time to everyone!
-		for _, channel := range t.registeredChannels {
-			channel <- time
-		}
-
 		select {
+		case _ = <-ticker.C:
+			time.Update(0.1)
+
+			// Send the time to everyone!
+			for _, channel := range t.registeredChannels {
+				channel <- time
+			}
 		case reg := <-t.RegistrationChannel:
 			t.registeredChannels = append(t.registeredChannels, reg)
 		case _ = <-t.ControlChannel:
 			ticker.Stop()
 			return
-		default:
 		}
 	}
 }
