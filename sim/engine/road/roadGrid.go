@@ -42,6 +42,7 @@ func (p *RoadGrid) setupLineConnections(startNode, lineId, endNode int64, line *
 	endTerminus := p.grid.GetNode(endNode).(*RoadTerminus)
 	endTerminus.LineAddVehicleChannels[lineId] = line.AddVehicleChannel
 
+	line.Id = lineId
 	line.lowTerminus = min64(startNode, endNode)
 	line.highTerminus = max64(startNode, endNode)
 	if startNode > endNode {
@@ -79,6 +80,7 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 
 	if startNode == -1 {
 		terminus := NewRoadTerminus(start)
+		mailroom.NewRoadTerminusChannel <- geometry.NewIdPoint(terminus.Id, terminus.location)
 		go terminus.run()
 
 		startNode = p.grid.AddNode(terminus)
@@ -88,6 +90,7 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 
 	if endNode == -1 {
 		terminus := NewRoadTerminus(end)
+		mailroom.NewRoadTerminusChannel <- geometry.NewIdPoint(terminus.Id, terminus.location)
 		go terminus.run()
 
 		endNode = p.grid.AddNode(terminus)
@@ -97,6 +100,7 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 
 	connectionStatus := p.grid.AddConnection(startNode, endNode, line)
 	mailroom.NewRoadLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
+	mailroom.NewRoadLineIdChannel <- geometry.NewIdOnlyLine(connectionStatus.Id, startNode, endNode)
 
 	// Hookup nodes to termii. TODO simplify / use grid more
 	return p.setupLineConnections(startNode, connectionStatus.Id, endNode, line)

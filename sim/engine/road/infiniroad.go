@@ -5,6 +5,7 @@ import (
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/core/mailroom"
+	"go-simulate-a-city/sim/engine/core/dto"
 
 	"github.com/ojrac/opensimplex-go"
 
@@ -21,8 +22,9 @@ type InfiniRoadNodeEnds struct {
 type InfiniRoadGenerator struct {
 	grid *RoadGrid
 
-	noise            *opensimplex.Noise
-	newRegionChannel chan commonMath.IntVec2
+	noise              *opensimplex.Noise
+	newRegionChannel   chan commonMath.IntVec2
+	timerUpdateChannel chan dto.Time
 
 	// Defines if each automatically-generated road has been generated
 	RoadGenerated map[int]bool
@@ -49,15 +51,17 @@ func max(a, b int) int {
 
 func NewInfiniRoadGenerator(grid *RoadGrid) *InfiniRoadGenerator {
 	infiniRoadGenerator := InfiniRoadGenerator{
-		grid:             grid,
-		noise:            opensimplex.NewWithSeed(int64(42)), // TODO: Configurable??
-		newRegionChannel: make(chan commonMath.IntVec2, 3),
-		RoadGenerated:    make(map[int]bool),
-		RoadNodeEdges:    make(map[int]InfiniRoadNodeEnds),
-		WestEdge:         0,
-		EastEdge:         0}
+		grid:               grid,
+		noise:              opensimplex.NewWithSeed(int64(42)), // TODO: Configurable??
+		newRegionChannel:   make(chan commonMath.IntVec2, 3),
+		timerUpdateChannel: make(chan dto.Time, 3),
+		RoadGenerated:      make(map[int]bool),
+		RoadNodeEdges:      make(map[int]InfiniRoadNodeEnds),
+		WestEdge:           0,
+		EastEdge:           0}
 
 	mailroom.NewRegionRegChannel <- infiniRoadGenerator.newRegionChannel
+	mailroom.CoreTimerRegChannel <- infiniRoadGenerator.timerUpdateChannel
 
 	go infiniRoadGenerator.run()
 	return &infiniRoadGenerator
@@ -68,7 +72,8 @@ func (i *InfiniRoadGenerator) run() {
 		select {
 		case newRegion := <-i.newRegionChannel:
 			i.GenerateRoad(newRegion)
-			break
+		case _ = <-i.timerUpdateChannel:
+			// TODO: spawn vehicles
 		}
 	}
 }

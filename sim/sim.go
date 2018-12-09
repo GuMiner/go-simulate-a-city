@@ -59,6 +59,8 @@ func main() {
 
 	window.MakeContextCurrent()
 
+	mailroom.Init()
+
 	input.SetupInputBufferAgent()
 	mailroom.MousePressedRegChannel = input.InputBuffer.MousePressedRegChannel
 	mailroom.MouseReleasedRegChannel = input.InputBuffer.MouseReleasedRegChannel
@@ -108,6 +110,11 @@ func main() {
 	roadGridRenderer := flat.NewRoadGridRenderer()
 	mailroom.NewRoadLineChannel = roadGridRenderer.Renderer.NewLineChannel
 	mailroom.DeleteRoadLineChannel = roadGridRenderer.Renderer.DeleteLineChannel
+
+	vehicleRenderer := flat.NewVehicleRenderer()
+	mailroom.NewRoadLineIdChannel = vehicleRenderer.RoadLineRegChannel
+	mailroom.NewRoadTerminusChannel = vehicleRenderer.TerminusChannel
+	mailroom.VehicleUpdateChannel = vehicleRenderer.VehicleUpdateChannel
 
 	snapRenderer := flat.NewSnapRenderer()
 	mailroom.SnappedNodesUpdateChannel = snapRenderer.SnappedNodesUpdateChannel
@@ -163,6 +170,8 @@ func main() {
 		// }
 
 		roadGridRenderer.Renderer.Render()
+		vehicleRenderer.Renderer.Render()
+
 		powerGridRenderer.LineRenderer.Render()
 	}
 

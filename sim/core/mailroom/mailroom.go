@@ -5,6 +5,7 @@ import (
 	"go-simulate-a-city/sim/core/dto/editorengdto"
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/dto/terraindto"
+	"go-simulate-a-city/sim/core/dto/vehicledto"
 	"go-simulate-a-city/sim/engine/core/dto"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -49,5 +50,14 @@ var DeletePowerPlantChannel chan int64
 var NewRoadLineChannel chan geometry.IdLine
 var DeleteRoadLineChannel chan int64
 
+// Vehicles
+var VehicleUpdateChannel chan vehicledto.VehicleUpdate
+var NewRoadLineIdChannel chan geometry.IdOnlyLine
+var NewRoadTerminusChannel chan geometry.IdPoint
+
 // Snap nodes
 var SnappedNodesUpdateChannel chan []mgl32.Vec2
+
+func Init() {
+	// Future implementation
+}

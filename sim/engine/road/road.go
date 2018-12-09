@@ -1,6 +1,8 @@
 package road
 
 import (
+	"go-simulate-a-city/sim/core/dto/vehicledto"
+	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core/dto"
 	"go-simulate-a-city/sim/engine/vehicle"
 
@@ -52,6 +54,7 @@ type RoadLine struct {
 	highTerminus           int64
 	highTerminusAddChannel chan VehicleAddition
 
+	Id                 int64
 	TimerUpdateChannel chan dto.Time
 	AddVehicleChannel  chan VehicleAddition
 	ControlChannel     chan int
@@ -78,11 +81,24 @@ func (r *RoadLine) run() {
 					vehicle: addition.Vehicle,
 					speed:   addition.Speed,
 					percent: 0.0}
+
+				mailroom.VehicleUpdateChannel <- vehicledto.VehicleUpdate{
+					Id:            addition.VehicleId,
+					RoadId:        r.Id,
+					TravelLength:  0.001,
+					VehicleLength: addition.Vehicle.Length}
+
 			} else {
 				r.highToLowTraffic[addition.VehicleId] = progressingVehicle{
 					vehicle: addition.Vehicle,
 					speed:   addition.Speed,
 					percent: 0.0}
+
+				mailroom.VehicleUpdateChannel <- vehicledto.VehicleUpdate{
+					Id:            addition.VehicleId,
+					RoadId:        r.Id,
+					TravelLength:  -0.001,
+					VehicleLength: addition.Vehicle.Length}
 			}
 		case _ = <-r.TimerUpdateChannel:
 			// Move traffic along the road line
@@ -96,6 +112,12 @@ func (r *RoadLine) run() {
 						TerminusId: r.highTerminus,
 						Speed:      vehicle.speed}
 					delete(r.highToLowTraffic, vehicleId)
+				} else {
+					mailroom.VehicleUpdateChannel <- vehicledto.VehicleUpdate{
+						Id:            vehicleId,
+						RoadId:        r.Id,
+						TravelLength:  -vehicle.percent,
+						VehicleLength: vehicle.vehicle.Length}
 				}
 			}
 
@@ -108,6 +130,12 @@ func (r *RoadLine) run() {
 						TerminusId: r.lowTerminus,
 						Speed:      vehicle.speed}
 					delete(r.lowToHighTraffic, vehicleId)
+				} else {
+					mailroom.VehicleUpdateChannel <- vehicledto.VehicleUpdate{
+						Id:            vehicleId,
+						RoadId:        r.Id,
+						TravelLength:  vehicle.percent,
+						VehicleLength: vehicle.vehicle.Length}
 				}
 			}
 		case _ = <-r.ControlChannel:
