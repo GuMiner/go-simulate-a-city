@@ -1,20 +1,18 @@
 package citizen
 
+import "go-simulate-a-city/sim/core/cmap"
+
 type Citizen struct {
 	Age int // In days
 }
 
-type Population struct {
-	citizens      map[int64]*Citizen
-	nextCitizenId int64
+type CitizenManager struct {
+	citizens *cmap.Map
 }
 
-func newCitizen() *Citizen {
-	return &Citizen{}
-}
+func NewCitizenManager() *CitizenManager {
+	manager := &CitizenManager{
+		citizens: cmap.NewMap()}
 
-func NewPopulation() *Population {
-	return &Population{
-		citizens:      make(map[int64]*Citizen),
-		nextCitizenId: 0}
+	return manager
 }
