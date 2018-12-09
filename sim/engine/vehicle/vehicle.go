@@ -17,6 +17,11 @@ type Vehicle struct {
 	Cargo resource.ResourceAmount
 }
 
+func NewVehicle() *Vehicle {
+	return &Vehicle{
+		Length: 10.0}
+}
+
 type VehicleManager struct {
 	vehicles *cmap.Map
 }
@@ -26,4 +31,10 @@ func NewVehicleManager() *VehicleManager {
 		vehicles: cmap.NewMap()}
 
 	return manager
+}
+
+func (v *VehicleManager) NewVehicle() (*Vehicle, int64) {
+	vehicle := NewVehicle()
+	vehicleId := v.vehicles.IterativeAdd(vehicle)
+	return vehicle, vehicleId
 }

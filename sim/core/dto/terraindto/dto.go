@@ -1,7 +1,6 @@
 package terraindto
 
 import (
-	"fmt"
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
 )
@@ -52,8 +51,6 @@ func (t *TerrainSubMap) GenerateSubMap(x, y int, generationFunction GenerationFu
 			t.Texels[i][j].Normalize()
 		}
 	}
-
-	fmt.Printf("Generated sub map terrain for [%v, %v]\n", x, y)
 }
 
 type TerrainUpdate struct {

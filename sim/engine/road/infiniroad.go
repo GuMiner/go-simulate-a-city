@@ -6,6 +6,7 @@ import (
 	"go-simulate-a-city/sim/config"
 	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core/dto"
+	"go-simulate-a-city/sim/engine/vehicle"
 
 	"github.com/ojrac/opensimplex-go"
 
@@ -20,45 +21,42 @@ type InfiniRoadNodeEnds struct {
 }
 
 type InfiniRoadGenerator struct {
-	grid *RoadGrid
+	grid           *RoadGrid
+	vehicleManager *vehicle.VehicleManager
 
 	noise              *opensimplex.Noise
 	newRegionChannel   chan commonMath.IntVec2
 	timerUpdateChannel chan dto.Time
 
 	// Defines if each automatically-generated road has been generated
-	RoadGenerated map[int]bool
-	RoadNodeEdges map[int]InfiniRoadNodeEnds
-	WestEdge      int
-	EastEdge      int
+	RoadGenerated  map[int]bool
+	RoadNodeEdges  map[int]InfiniRoadNodeEnds
+	WestEdge       int
+	EastEdge       int
+	WestLineId     int64
+	EastLineId     int64
+	WestTerminusId int64
+	EastTerminusId int64
+
+	NewCarTimer int
 }
 
-func min(a, b int) int {
-	if a > b {
-		return b
-	}
-
-	return a
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-
-	return b
-}
-
-func NewInfiniRoadGenerator(grid *RoadGrid) *InfiniRoadGenerator {
+func NewInfiniRoadGenerator(grid *RoadGrid, vehicleManager *vehicle.VehicleManager) *InfiniRoadGenerator {
 	infiniRoadGenerator := InfiniRoadGenerator{
 		grid:               grid,
+		vehicleManager:     vehicleManager,
 		noise:              opensimplex.NewWithSeed(int64(42)), // TODO: Configurable??
 		newRegionChannel:   make(chan commonMath.IntVec2, 3),
 		timerUpdateChannel: make(chan dto.Time, 3),
 		RoadGenerated:      make(map[int]bool),
 		RoadNodeEdges:      make(map[int]InfiniRoadNodeEnds),
 		WestEdge:           0,
-		EastEdge:           0}
+		EastEdge:           0,
+		WestLineId:         -1,
+		EastLineId:         -1,
+		WestTerminusId:     -1,
+		EastTerminusId:     -1,
+		NewCarTimer:        0}
 
 	mailroom.NewRegionRegChannel <- infiniRoadGenerator.newRegionChannel
 	mailroom.CoreTimerRegChannel <- infiniRoadGenerator.timerUpdateChannel
@@ -73,7 +71,36 @@ func (i *InfiniRoadGenerator) run() {
 		case newRegion := <-i.newRegionChannel:
 			i.GenerateRoad(newRegion)
 		case _ = <-i.timerUpdateChannel:
-			// TODO: spawn vehicles
+			if i.WestLineId != -1 {
+				i.NewCarTimer++
+
+				// This right now is approximately a car each direction each second.
+				if i.NewCarTimer == 10 {
+					// i.NewCarTimer = 11
+
+					// TODO create cars based on demand and if roads have space
+					westVehicle, westVehicleId := i.vehicleManager.NewVehicle()
+					fmt.Printf("Adding vehicle %v to %v, line %v\n", westVehicleId, i.WestTerminusId, i.WestLineId)
+
+					// Create a new west-bound car
+					westRoadLine := i.grid.grid.GetConnection(i.WestLineId).(*RoadLine)
+					westRoadLine.AddVehicleChannel <- VehicleAddition{
+						VehicleId:  westVehicleId,
+						Vehicle:    westVehicle,
+						TerminusId: i.WestTerminusId,
+						Speed:      0.0}
+
+					eastVehicle, eastVehicleId := i.vehicleManager.NewVehicle()
+					fmt.Printf("Adding vehicle %v to %v, line %v\n", eastVehicleId, i.EastTerminusId, i.EastLineId)
+
+					eastRoadLine := i.grid.grid.GetConnection(i.EastLineId).(*RoadLine)
+					eastRoadLine.AddVehicleChannel <- VehicleAddition{
+						VehicleId:  eastVehicleId,
+						Vehicle:    eastVehicle,
+						TerminusId: i.EastTerminusId,
+						Speed:      0.0}
+				}
+			}
 		}
 	}
 }
@@ -99,8 +126,6 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 		return
 	}
 
-	i.WestEdge = min(region.X()-1, i.WestEdge)
-	i.EastEdge = max(region.X()+1, i.EastEdge)
 	fmt.Printf("Max infinite road bounds: %v, %v\n", i.WestEdge, i.EastEdge)
 
 	westNodeId := i.getNodeId(region.X(), -1)
@@ -139,7 +164,18 @@ func (i *InfiniRoadGenerator) GenerateRoad(region commonMath.IntVec2) {
 	// TODO: This should be a lot smarter and follow contours
 	roadId := int64(-1)
 	westNodeId, roadId, eastNodeId = i.grid.AddLine(start, end, 1000, westNodeId, eastNodeId)
-	fmt.Printf("  Generated new infinite-road element for [%v, %v]: %v\n", region.X(), region.Y(), roadId)
+
+	if region.X()-1 < i.WestEdge {
+		i.WestEdge = region.X() - 1
+		i.WestLineId = roadId
+		i.WestTerminusId = westNodeId
+	}
+
+	if region.X()+1 > i.EastEdge {
+		i.EastEdge = region.X() + 1
+		i.EastLineId = roadId
+		i.EastTerminusId = eastNodeId
+	}
 
 	// Update our caches so we don't infinitely generate infinite roads.
 	i.markRoadAsGenerated(region.X())

@@ -10,6 +10,7 @@ import (
 	"go-simulate-a-city/sim/engine/power"
 	"go-simulate-a-city/sim/engine/road"
 	"go-simulate-a-city/sim/engine/terrain"
+	"go-simulate-a-city/sim/engine/vehicle"
 	"go-simulate-a-city/sim/input/editorEngine"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -21,6 +22,7 @@ type Engine struct {
 	elementFinder       *finder.ElementFinder
 	powerGrid           *power.PowerGrid
 	roadGrid            *road.RoadGrid
+	vehicleManager      *vehicle.VehicleManager
 	infiniRoadGenerator *road.InfiniRoadGenerator
 
 	isMousePressed bool
@@ -69,7 +71,8 @@ func NewEngine() *Engine {
 	engine.elementFinder = finder.NewElementFinder()
 	engine.powerGrid = power.NewPowerGrid(engine.elementFinder)
 	engine.roadGrid = road.NewRoadGrid(engine.elementFinder)
-	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(engine.roadGrid)
+	engine.vehicleManager = vehicle.NewVehicleManager()
+	engine.infiniRoadGenerator = road.NewInfiniRoadGenerator(engine.roadGrid, engine.vehicleManager)
 	engine.isMousePressed = false
 	engine.powerLineState = NewEditState()
 	engine.roadLineState = NewEditState()

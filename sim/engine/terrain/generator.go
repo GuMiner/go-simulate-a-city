@@ -1,7 +1,6 @@
 package terrain
 
 import (
-	"fmt"
 	"go-simulate-a-city/common/commonmath"
 	"go-simulate-a-city/sim/config"
 	"math"
@@ -62,7 +61,6 @@ func Generate(width, height, xOffset, yOffset int) []float32 {
 		}
 	}
 
-	fmt.Printf("Generated %v random elements within [%v, %v]\n", width*height, min, max)
 	return grid
 }
 

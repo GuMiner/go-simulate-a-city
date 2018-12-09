@@ -1,6 +1,7 @@
 package road
 
 import (
+	"fmt"
 	"go-simulate-a-city/sim/core/dto/vehicledto"
 	"go-simulate-a-city/sim/core/mailroom"
 	"go-simulate-a-city/sim/engine/core/dto"
@@ -45,8 +46,8 @@ func NewRoadTerminus(location mgl32.Vec2) *RoadTerminus {
 type RoadLine struct {
 	capacity int64
 
-	lowToHighTraffic map[int64]progressingVehicle
-	highToLowTraffic map[int64]progressingVehicle
+	lowToHighTraffic map[int64]*progressingVehicle
+	highToLowTraffic map[int64]*progressingVehicle
 
 	lowTerminus           int64
 	lowTerminusAddChannel chan VehicleAddition
@@ -63,8 +64,8 @@ type RoadLine struct {
 func NewRoadLine(capacity int64) *RoadLine {
 	roadLine := RoadLine{
 		capacity:           capacity,
-		lowToHighTraffic:   make(map[int64]progressingVehicle),
-		highToLowTraffic:   make(map[int64]progressingVehicle),
+		lowToHighTraffic:   make(map[int64]*progressingVehicle),
+		highToLowTraffic:   make(map[int64]*progressingVehicle),
 		TimerUpdateChannel: make(chan dto.Time, 3),
 		AddVehicleChannel:  make(chan VehicleAddition, 3),
 		ControlChannel:     make(chan int)}
@@ -77,7 +78,7 @@ func (r *RoadLine) run() {
 		select {
 		case addition := <-r.AddVehicleChannel:
 			if addition.TerminusId == r.lowTerminus {
-				r.lowToHighTraffic[addition.VehicleId] = progressingVehicle{
+				r.lowToHighTraffic[addition.VehicleId] = &progressingVehicle{
 					vehicle: addition.Vehicle,
 					speed:   addition.Speed,
 					percent: 0.0}
@@ -89,7 +90,7 @@ func (r *RoadLine) run() {
 					VehicleLength: addition.Vehicle.Length}
 
 			} else {
-				r.highToLowTraffic[addition.VehicleId] = progressingVehicle{
+				r.highToLowTraffic[addition.VehicleId] = &progressingVehicle{
 					vehicle: addition.Vehicle,
 					speed:   addition.Speed,
 					percent: 0.0}
@@ -104,6 +105,7 @@ func (r *RoadLine) run() {
 			// Move traffic along the road line
 			// TODO: Silly demo
 			for vehicleId, vehicle := range r.highToLowTraffic {
+				fmt.Printf("vehicle %v at percent %v on line %v\n", vehicleId, vehicle.percent, r.Id)
 				vehicle.percent += 0.05
 				if vehicle.percent >= 1.0 {
 					r.lowTerminusAddChannel <- VehicleAddition{
@@ -122,6 +124,7 @@ func (r *RoadLine) run() {
 			}
 
 			for vehicleId, vehicle := range r.lowToHighTraffic {
+				fmt.Printf("vehicle %v at percent %v on line %v\n", vehicleId, vehicle.percent, r.Id)
 				vehicle.percent += 0.05
 				if vehicle.percent >= 1.0 {
 					r.highTerminusAddChannel <- VehicleAddition{

@@ -87,6 +87,7 @@ func (d *Graph) AddConnection(first, second int64, data interface{}) ConnectionR
 				return ConnectionResult{Status: Exists, Id: d.nodes[first].connections[second].Id}
 			} else {
 				connectionIdx := d.newConnectionIndex
+				d.connections[connectionIdx] = &Connection{First: first, Second: second}
 				d.nodes[first].connections[second] = nodeInternalConnection{Data: data, Id: connectionIdx}
 				d.nodes[second].connections[first] = nodeInternalConnection{Data: data, Id: connectionIdx}
 
@@ -170,5 +171,22 @@ func (d *Graph) GetNode(nodeId int64) interface{} {
 	d.nodesLock.Lock()
 	defer d.nodesLock.Unlock()
 
-	return d.nodes[nodeId].data
+	node := d.nodes[nodeId]
+	if node == nil {
+		return nil
+	}
+
+	return node.data
+}
+
+func (d *Graph) GetConnection(connectionId int64) interface{} {
+	d.nodesLock.Lock()
+	defer d.nodesLock.Unlock()
+
+	connection := d.connections[connectionId]
+	if connection == nil {
+		return nil
+	}
+
+	return d.nodes[connection.First].connections[connection.Second].Data
 }
