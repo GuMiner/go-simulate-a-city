@@ -74,6 +74,7 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 			return -1, -1, -1
 		} else {
 			mailroom.NewRoadLineChannel <- geometry.NewIdLine(connectionStatus.Id, [2]mgl32.Vec2{start, end})
+			mailroom.NewRoadLineIdChannel <- geometry.NewIdOnlyLine(connectionStatus.Id, startNode, endNode)
 			return p.setupLineConnections(startNode, connectionStatus.Id, endNode, line)
 		}
 	}
