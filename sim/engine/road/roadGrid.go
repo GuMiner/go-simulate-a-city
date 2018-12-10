@@ -80,21 +80,23 @@ func (p *RoadGrid) AddLine(start, end mgl32.Vec2, capacity int64, startNode, end
 
 	if startNode == -1 {
 		terminus := NewRoadTerminus(start)
+		startNode = p.grid.AddNode(terminus)
+		terminus.Id = startNode
+
 		mailroom.NewRoadTerminusChannel <- geometry.NewIdPoint(terminus.Id, terminus.location)
 		go terminus.run()
 
-		startNode = p.grid.AddNode(terminus)
-		terminus.Id = startNode
 		p.finder.AddElementChannel <- finder.NewElement(startNode, finder.RoadTerminus, []mgl32.Vec2{start})
 	}
 
 	if endNode == -1 {
 		terminus := NewRoadTerminus(end)
+		endNode = p.grid.AddNode(terminus)
+		terminus.Id = endNode
+
 		mailroom.NewRoadTerminusChannel <- geometry.NewIdPoint(terminus.Id, terminus.location)
 		go terminus.run()
 
-		endNode = p.grid.AddNode(terminus)
-		terminus.Id = endNode
 		p.finder.AddElementChannel <- finder.NewElement(endNode, finder.RoadTerminus, []mgl32.Vec2{end})
 	}
 

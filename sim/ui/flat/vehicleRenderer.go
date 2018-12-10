@@ -1,6 +1,7 @@
 package flat
 
 import (
+	"fmt"
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/dto/vehicledto"
 
@@ -43,6 +44,7 @@ func (r *VehicleRenderer) run() {
 			if road, ok := r.roadLines[vehicleUpdate.RoadId]; ok {
 				if startPos, ok := r.roadTerminii[road.Start]; ok {
 					if endPos, ok := r.roadTerminii[road.End]; ok {
+						fmt.Printf("Valid vehicle update: %v %v %v\n", startPos, endPos, road)
 						// Swap so the percentage we take is always from start to end.
 						if (road.End < road.Start && vehicleUpdate.TravelLength > 0) ||
 							(road.End > road.Start && vehicleUpdate.TravelLength < 0) {
@@ -57,9 +59,9 @@ func (r *VehicleRenderer) run() {
 
 						// Compute start and end
 						roadSegment := endPos.Sub(startPos)
-						vehicleLengthPercent := roadSegment.Len() / vehicleUpdate.VehicleLength
+						vehicleLengthPercent := vehicleUpdate.VehicleLength / roadSegment.Len()
 						start := roadSegment.Mul(vehicleUpdate.TravelLength).Add(startPos)
-						end := endPos.Sub(startPos).Mul(vehicleUpdate.TravelLength + vehicleLengthPercent).Add(startPos)
+						end := roadSegment.Mul(vehicleUpdate.TravelLength + vehicleLengthPercent).Add(startPos)
 
 						r.Renderer.NewLineChannel <- geometry.NewIdLine(vehicleUpdate.Id, [2]mgl32.Vec2{start, end})
 					}
