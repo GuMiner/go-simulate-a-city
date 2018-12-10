@@ -1,7 +1,6 @@
 package flat
 
 import (
-	"fmt"
 	"go-simulate-a-city/sim/core/dto/geometry"
 	"go-simulate-a-city/sim/core/dto/vehicledto"
 
@@ -44,7 +43,6 @@ func (r *VehicleRenderer) run() {
 			if road, ok := r.roadLines[vehicleUpdate.RoadId]; ok {
 				if startPos, ok := r.roadTerminii[road.Start]; ok {
 					if endPos, ok := r.roadTerminii[road.End]; ok {
-						fmt.Printf("Valid vehicle update: %v %v %v\n", startPos, endPos, road)
 						// Swap so the percentage we take is always from start to end.
 						if (road.End < road.Start && vehicleUpdate.TravelLength > 0) ||
 							(road.End > road.Start && vehicleUpdate.TravelLength < 0) {

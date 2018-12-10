@@ -85,20 +85,20 @@ func (i *InfiniRoadGenerator) run() {
 					// Create a new west-bound car
 					westRoadLine := i.grid.grid.GetConnection(i.WestLineId).(*RoadLine)
 					westRoadLine.AddVehicleChannel <- VehicleAddition{
-						VehicleId:  westVehicleId,
-						Vehicle:    westVehicle,
-						TerminusId: i.WestTerminusId,
-						Speed:      0.0}
+						VehicleId:        westVehicleId,
+						Vehicle:          westVehicle,
+						SourceTerminusId: i.WestTerminusId,
+						Speed:            0.0}
 
-					eastVehicle, eastVehicleId := i.vehicleManager.NewVehicle()
-					fmt.Printf("Adding vehicle %v to %v, line %v\n", eastVehicleId, i.EastTerminusId, i.EastLineId)
-
-					eastRoadLine := i.grid.grid.GetConnection(i.EastLineId).(*RoadLine)
-					eastRoadLine.AddVehicleChannel <- VehicleAddition{
-						VehicleId:  eastVehicleId,
-						Vehicle:    eastVehicle,
-						TerminusId: i.EastTerminusId,
-						Speed:      0.0}
+					// eastVehicle, eastVehicleId := i.vehicleManager.NewVehicle()
+					// fmt.Printf("Adding vehicle %v to %v, line %v\n", eastVehicleId, i.EastTerminusId, i.EastLineId)
+					//
+					// eastRoadLine := i.grid.grid.GetConnection(i.EastLineId).(*RoadLine)
+					// eastRoadLine.AddVehicleChannel <- VehicleAddition{
+					// 	VehicleId:        eastVehicleId,
+					// 	Vehicle:          eastVehicle,
+					// 	SourceTerminusId: i.EastTerminusId,
+					// 	Speed:            0.0}
 				}
 			}
 		}

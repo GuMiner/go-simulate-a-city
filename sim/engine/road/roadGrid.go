@@ -38,9 +38,9 @@ func NewRoadGrid(finder *finder.ElementFinder) *RoadGrid {
 
 func (p *RoadGrid) setupLineConnections(startNode, lineId, endNode int64, line *RoadLine) (int64, int64, int64) {
 	startTerminus := p.grid.GetNode(startNode).(*RoadTerminus)
-	startTerminus.LineAddVehicleChannels[lineId] = line.AddVehicleChannel
+	startTerminus.LineAddVehicleChannels[endNode] = line.AddVehicleChannel
 	endTerminus := p.grid.GetNode(endNode).(*RoadTerminus)
-	endTerminus.LineAddVehicleChannels[lineId] = line.AddVehicleChannel
+	endTerminus.LineAddVehicleChannels[startNode] = line.AddVehicleChannel
 
 	line.Id = lineId
 	line.lowTerminus = min64(startNode, endNode)

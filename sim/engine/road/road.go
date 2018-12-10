@@ -17,10 +17,10 @@ type progressingVehicle struct {
 }
 
 type VehicleAddition struct {
-	VehicleId  int64
-	Vehicle    *vehicle.Vehicle
-	TerminusId int64
-	Speed      float32
+	VehicleId        int64
+	Vehicle          *vehicle.Vehicle
+	SourceTerminusId int64
+	Speed            float32
 }
 
 type RoadTerminus struct {
@@ -77,7 +77,7 @@ func (r *RoadLine) run() {
 	for {
 		select {
 		case addition := <-r.AddVehicleChannel:
-			if addition.TerminusId == r.lowTerminus {
+			if addition.SourceTerminusId == r.lowTerminus {
 				r.lowToHighTraffic[addition.VehicleId] = &progressingVehicle{
 					vehicle: addition.Vehicle,
 					speed:   addition.Speed,
@@ -105,14 +105,14 @@ func (r *RoadLine) run() {
 			// Move traffic along the road line
 			// TODO: Silly demo
 			for vehicleId, vehicle := range r.highToLowTraffic {
-				fmt.Printf("vehicle %v at percent %v on line %v\n", vehicleId, vehicle.percent, r.Id)
+				fmt.Printf("vehicle %v at L-H %v on line %v from %v to %v\n", vehicleId, vehicle.percent, r.Id, r.highTerminus, r.lowTerminus)
 				vehicle.percent += 0.05
 				if vehicle.percent >= 1.0 {
 					r.lowTerminusAddChannel <- VehicleAddition{
-						VehicleId:  vehicleId,
-						Vehicle:    vehicle.vehicle,
-						TerminusId: r.highTerminus,
-						Speed:      vehicle.speed}
+						VehicleId:        vehicleId,
+						Vehicle:          vehicle.vehicle,
+						SourceTerminusId: r.highTerminus,
+						Speed:            vehicle.speed}
 					delete(r.highToLowTraffic, vehicleId)
 				} else {
 					mailroom.VehicleUpdateChannel <- vehicledto.VehicleUpdate{
@@ -124,14 +124,14 @@ func (r *RoadLine) run() {
 			}
 
 			for vehicleId, vehicle := range r.lowToHighTraffic {
-				fmt.Printf("vehicle %v at percent %v on line %v\n", vehicleId, vehicle.percent, r.Id)
+				fmt.Printf("vehicle %v at H-L %v on line %v from %v to %v\n", vehicleId, vehicle.percent, r.Id, r.lowTerminus, r.highTerminus)
 				vehicle.percent += 0.05
 				if vehicle.percent >= 1.0 {
 					r.highTerminusAddChannel <- VehicleAddition{
-						VehicleId:  vehicleId,
-						Vehicle:    vehicle.vehicle,
-						TerminusId: r.lowTerminus,
-						Speed:      vehicle.speed}
+						VehicleId:        vehicleId,
+						Vehicle:          vehicle.vehicle,
+						SourceTerminusId: r.lowTerminus,
+						Speed:            vehicle.speed}
 					delete(r.lowToHighTraffic, vehicleId)
 				} else {
 					mailroom.VehicleUpdateChannel <- vehicledto.VehicleUpdate{
@@ -151,15 +151,33 @@ func (r *RoadTerminus) run() {
 	for {
 		select {
 		case vehicle := <-r.AddVehicleChannel:
-			// TODO silly demo lgoic.
+			for destinationId, _ := range r.LineAddVehicleChannels {
+				fmt.Printf("(%v) %v -- %v\n", r.Id, vehicle.SourceTerminusId, destinationId)
+			}
+
+			// TODO silly demo logic.
+			moved := false
 			for destinationId, channel := range r.LineAddVehicleChannels {
-				if destinationId != vehicle.TerminusId {
+				if destinationId != vehicle.SourceTerminusId {
 					// We're going somewhere else, so send it!
 					channel <- VehicleAddition{
-						VehicleId:  vehicle.VehicleId,
-						Vehicle:    vehicle.Vehicle,
-						Speed:      vehicle.Speed,
-						TerminusId: r.Id}
+						VehicleId:        vehicle.VehicleId,
+						Vehicle:          vehicle.Vehicle,
+						Speed:            vehicle.Speed,
+						SourceTerminusId: r.Id}
+					moved = true
+					break
+				}
+			}
+
+			if !moved {
+				// The vehicle has no where else to go so it bounces to the first result
+				for _, channel := range r.LineAddVehicleChannels {
+					channel <- VehicleAddition{
+						VehicleId:        vehicle.VehicleId,
+						Vehicle:          vehicle.Vehicle,
+						Speed:            vehicle.Speed,
+						SourceTerminusId: r.Id}
 					break
 				}
 			}
