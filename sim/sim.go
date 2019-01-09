@@ -37,7 +37,7 @@ func setInputCallbacks(window *glfw.Window) {
 }
 
 func main() {
-	// Start memory profiling
+	// Navigate to http://localhost:8765/debug/pprof/goroutine?debug=1 to see the current goroutines
 	go func() {
 		log.Println("Starting performance diagnostics on localhost:8765...")
 		log.Println(http.ListenAndServe("localhost:8765", nil))
