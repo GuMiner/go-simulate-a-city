@@ -2,11 +2,11 @@ package commonOpenGl
 
 // Simplifies creating a GLSL GPU shading program
 import (
+	commonIo "common/commonio"
 	"fmt"
-	"go-simulate-a-city/common/commonio"
 	"strings"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 )
 
 // Also pulled mostly from https://github.com/go-gl/example/blob/master/gl41core-cube/cube.go

@@ -1,12 +1,12 @@
 package mailroom
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/core/dto/editorengdto"
-	"go-simulate-a-city/sim/core/dto/geometry"
-	"go-simulate-a-city/sim/core/dto/terraindto"
-	"go-simulate-a-city/sim/core/dto/vehicledto"
-	"go-simulate-a-city/sim/engine/core/dto"
+	"common/commonmath"
+	"sim/core/dto/editorengdto"
+	"sim/core/dto/geometry"
+	"sim/core/dto/terraindto"
+	"sim/core/dto/vehicledto"
+	"sim/engine/core/dto"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"

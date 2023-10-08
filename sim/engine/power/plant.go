@@ -1,7 +1,7 @@
 package power
 
 import (
-	"go-simulate-a-city/common/commonmath"
+	"common/commonmath"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

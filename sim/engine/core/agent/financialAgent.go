@@ -2,8 +2,8 @@ package agent
 
 import (
 	"fmt"
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/engine/core/dto"
+	"sim/config"
+	"sim/engine/core/dto"
 )
 
 type FinancialAgent struct {

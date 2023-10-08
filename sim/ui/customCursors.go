@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"go-simulate-a-city/common/commonio"
-	"go-simulate-a-city/sim/core/dto/editorengdto"
-	"go-simulate-a-city/sim/core/mailroom"
+	"common/commonio"
+	"sim/core/dto/editorengdto"
+	"sim/core/mailroom"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )

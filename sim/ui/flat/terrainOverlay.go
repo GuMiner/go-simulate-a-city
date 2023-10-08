@@ -1,12 +1,12 @@
 package flat
 
 import (
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/dto/terraindto"
-	"go-simulate-a-city/sim/core/gamegrid"
-	"go-simulate-a-city/sim/ui/overlay"
+	"sim/config"
+	"sim/core/dto/terraindto"
+	"sim/core/gamegrid"
+	"sim/ui/overlay"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
 )
 

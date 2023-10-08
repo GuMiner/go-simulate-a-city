@@ -1,8 +1,8 @@
 package vehicle
 
 import (
-	"go-simulate-a-city/sim/core/cmap"
-	"go-simulate-a-city/sim/engine/resource"
+	"sim/core/cmap"
+	"sim/engine/resource"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

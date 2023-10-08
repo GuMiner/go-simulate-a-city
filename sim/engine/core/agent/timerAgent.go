@@ -1,7 +1,7 @@
 package agent
 
 import (
-	"go-simulate-a-city/sim/engine/core/dto"
+	"sim/engine/core/dto"
 	"time"
 )
 

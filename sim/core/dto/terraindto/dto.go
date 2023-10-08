@@ -1,8 +1,8 @@
 package terraindto
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/config"
+	"common/commonmath"
+	"sim/config"
 )
 
 type GenerationFunc func(int, int, int, int) []float32

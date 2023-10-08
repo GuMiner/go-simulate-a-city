@@ -1,12 +1,12 @@
 package flat
 
 import (
-	"go-simulate-a-city/common/commonopengl"
+	"common/commonopengl"
 	"time"
 
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/gamegrid"
-	"go-simulate-a-city/sim/input"
+	"sim/config"
+	"sim/core/gamegrid"
+	"sim/input"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"

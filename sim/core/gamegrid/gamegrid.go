@@ -1,9 +1,9 @@
 package gamegrid
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/common/commonopengl"
-	"go-simulate-a-city/sim/config"
+	"common/commonmath"
+	"common/commonopengl"
+	"sim/config"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

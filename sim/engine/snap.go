@@ -1,11 +1,11 @@
 package engine
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/dto/editorengdto"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/finder"
+	"common/commonmath"
+	"sim/config"
+	"sim/core/dto/editorengdto"
+	"sim/core/mailroom"
+	"sim/engine/finder"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

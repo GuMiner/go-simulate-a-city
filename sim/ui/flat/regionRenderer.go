@@ -1,11 +1,11 @@
 package flat
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/core/dto/geometry"
-	"go-simulate-a-city/sim/core/gamegrid"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/ui"
+	"common/commonmath"
+	"sim/core/dto/geometry"
+	"sim/core/gamegrid"
+	"sim/core/mailroom"
+	"sim/ui"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

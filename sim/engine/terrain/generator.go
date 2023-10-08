@@ -1,15 +1,15 @@
 package terrain
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/config"
+	commonMath "common/commonmath"
 	"math"
+	"sim/config"
 
 	"github.com/ojrac/opensimplex-go"
 )
 
 type TerrainGenerator struct {
-	noise *opensimplex.Noise
+	noise opensimplex.Noise
 
 	// Offset values used to place the noise in the 0 to 1 range.
 	hasSetOffsetFactors bool
@@ -21,7 +21,7 @@ var terrainGenerator TerrainGenerator
 
 func Init(seed int) {
 	terrainGenerator = TerrainGenerator{
-		noise:               opensimplex.NewWithSeed(int64(seed)),
+		noise:               opensimplex.New(int64(seed)),
 		hasSetOffsetFactors: false}
 }
 

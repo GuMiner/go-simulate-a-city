@@ -1,6 +1,6 @@
 package citizen
 
-import "go-simulate-a-city/sim/core/cmap"
+import "sim/core/cmap"
 
 type Citizen struct {
 	Age int // In days

@@ -50,7 +50,7 @@
             "z": 1
         },
         "openGlMajor": 4,
-        "openGlMinor": 5,
+        "openGlMinor": 4,
         "samples": 2
     }
 }

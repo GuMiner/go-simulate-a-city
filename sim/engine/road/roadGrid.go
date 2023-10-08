@@ -2,10 +2,10 @@ package road
 
 import (
 	"fmt"
-	"go-simulate-a-city/sim/core/dto/geometry"
-	"go-simulate-a-city/sim/core/graph"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/finder"
+	"sim/core/dto/geometry"
+	"sim/core/graph"
+	"sim/core/mailroom"
+	"sim/engine/finder"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

@@ -1,9 +1,9 @@
 package ui
 
 import (
-	"go-simulate-a-city/sim/ui/lines"
-	"go-simulate-a-city/sim/ui/overlay"
-	"go-simulate-a-city/sim/ui/region"
+	"sim/ui/lines"
+	"sim/ui/overlay"
+	"sim/ui/region"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )

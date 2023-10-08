@@ -1,9 +1,9 @@
 package commonOpenGl
 
 import (
-	"go-simulate-a-city/common/commonconfig"
+	commonConfig "common/commonconfig"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
 )

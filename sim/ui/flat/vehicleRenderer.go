@@ -1,8 +1,8 @@
 package flat
 
 import (
-	"go-simulate-a-city/sim/core/dto/geometry"
-	"go-simulate-a-city/sim/core/dto/vehicledto"
+	"sim/core/dto/geometry"
+	"sim/core/dto/vehicledto"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

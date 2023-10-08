@@ -3,7 +3,7 @@ package commonConfig
 import (
 	"encoding/json"
 	"fmt"
-	"go-simulate-a-city/common/commonio"
+	"common/commonio"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

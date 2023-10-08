@@ -1,17 +1,17 @@
 package engine
 
 import (
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/dto/editorengdto"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/core"
-	"go-simulate-a-city/sim/engine/core/dto"
-	"go-simulate-a-city/sim/engine/finder"
-	"go-simulate-a-city/sim/engine/power"
-	"go-simulate-a-city/sim/engine/road"
-	"go-simulate-a-city/sim/engine/terrain"
-	"go-simulate-a-city/sim/engine/vehicle"
-	"go-simulate-a-city/sim/input/editorEngine"
+	"sim/config"
+	"sim/core/dto/editorengdto"
+	"sim/core/mailroom"
+	"sim/engine/core"
+	"sim/engine/core/dto"
+	"sim/engine/finder"
+	"sim/engine/power"
+	"sim/engine/road"
+	"sim/engine/terrain"
+	"sim/engine/vehicle"
+	"sim/input/editorEngine"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"

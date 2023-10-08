@@ -1,12 +1,12 @@
 package road
 
 import (
+	commonMath "common/commonmath"
 	"fmt"
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/core/dto"
-	"go-simulate-a-city/sim/engine/vehicle"
+	"sim/config"
+	"sim/core/mailroom"
+	"sim/engine/core/dto"
+	"sim/engine/vehicle"
 
 	"github.com/ojrac/opensimplex-go"
 
@@ -24,7 +24,7 @@ type InfiniRoadGenerator struct {
 	grid           *RoadGrid
 	vehicleManager *vehicle.VehicleManager
 
-	noise              *opensimplex.Noise
+	noise              opensimplex.Noise
 	newRegionChannel   chan commonMath.IntVec2
 	timerUpdateChannel chan dto.Time
 
@@ -45,7 +45,7 @@ func NewInfiniRoadGenerator(grid *RoadGrid, vehicleManager *vehicle.VehicleManag
 	infiniRoadGenerator := InfiniRoadGenerator{
 		grid:               grid,
 		vehicleManager:     vehicleManager,
-		noise:              opensimplex.NewWithSeed(int64(42)), // TODO: Configurable??
+		noise:              opensimplex.New(int64(42)), // TODO: Configurable??
 		newRegionChannel:   make(chan commonMath.IntVec2, 3),
 		timerUpdateChannel: make(chan dto.Time, 3),
 		RoadGenerated:      make(map[int]bool),

@@ -1,24 +1,24 @@
 package main
 
 import (
-	"go-simulate-a-city/common/commoncolor"
-	"go-simulate-a-city/common/commonconfig"
-	"go-simulate-a-city/common/commonopengl"
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine"
-	"go-simulate-a-city/sim/engine/core"
-	"go-simulate-a-city/sim/input"
-	"go-simulate-a-city/sim/input/editorEngine"
-	"go-simulate-a-city/sim/ui"
-	"go-simulate-a-city/sim/ui/flat"
+	commonColor "common/commoncolor"
+	commonConfig "common/commonconfig"
+	commonOpenGl "common/commonopengl"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"runtime"
+	"sim/config"
+	"sim/core/mailroom"
+	"sim/engine"
+	"sim/engine/core"
+	"sim/input"
+	"sim/input/editorEngine"
+	"sim/ui"
+	"sim/ui/flat"
 	"time"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -185,6 +185,7 @@ func RenderLoop(update, render func(), window *glfw.Window) {
 		// Render the full display.
 		commonOpenGl.ResetViewport()
 		render()
+
 		window.SwapBuffers()
 	}
 }

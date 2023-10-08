@@ -1,12 +1,12 @@
 package region
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/common/commonopengl"
+	commonMath "common/commonmath"
+	commonOpenGl "common/commonopengl"
 
 	"github.com/go-gl/mathgl/mgl32"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 )
 
 type RegionShadingData struct {

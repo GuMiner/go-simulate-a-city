@@ -2,11 +2,11 @@ package commonOpenGl
 
 // Simplifies OpenGL initialization
 import (
+	commonConfig "common/commonconfig"
 	"fmt"
-	"go-simulate-a-city/common/commonconfig"
 	"log"
 
-	"github.com/go-gl/gl/v4.5-core/gl"
+	"github.com/go-gl/gl/v4.4-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
@@ -52,6 +52,7 @@ func InitGlfw() {
 	if commonConfig.Config.Window.Samples > 0 {
 		glfw.WindowHint(glfw.Samples, commonConfig.Config.Window.Samples)
 	}
+
 }
 
 func ConfigureOpenGl() {

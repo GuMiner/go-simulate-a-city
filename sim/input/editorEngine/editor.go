@@ -2,8 +2,8 @@ package editorEngine
 
 import (
 	"fmt"
-	"go-simulate-a-city/sim/core/dto/editorengdto"
-	"go-simulate-a-city/sim/input"
+	"sim/core/dto/editorengdto"
+	"sim/input"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )

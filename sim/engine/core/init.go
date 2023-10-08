@@ -1,8 +1,8 @@
 package core
 
 import (
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/core/agent"
+	"sim/core/mailroom"
+	"sim/engine/core/agent"
 )
 
 var CoreTimer agent.Timer

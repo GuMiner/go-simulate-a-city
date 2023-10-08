@@ -1,12 +1,12 @@
 package terrain
 
 import (
-	"go-simulate-a-city/common/commonmath"
-	"go-simulate-a-city/sim/config"
-	"go-simulate-a-city/sim/core/dto/terraindto"
-	"go-simulate-a-city/sim/core/gamegrid"
-	"go-simulate-a-city/sim/core/mailroom"
-	"go-simulate-a-city/sim/engine/subtile"
+	"common/commonmath"
+	"sim/config"
+	"sim/core/dto/terraindto"
+	"sim/core/gamegrid"
+	"sim/core/mailroom"
+	"sim/engine/subtile"
 
 	"github.com/go-gl/mathgl/mgl32"
 )

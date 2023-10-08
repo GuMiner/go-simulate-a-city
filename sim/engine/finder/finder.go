@@ -1,7 +1,7 @@
 package finder
 
 import (
-	"go-simulate-a-city/sim/core"
+	"sim/core"
 )
 
 // Defines how to quickly add, remove, and find points on our gameboard.

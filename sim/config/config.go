@@ -3,8 +3,8 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"go-simulate-a-city/common/commonconfig"
-	"go-simulate-a-city/common/commonio"
+	"common/commonconfig"
+	"common/commonio"
 )
 
 type TerrainUi struct {

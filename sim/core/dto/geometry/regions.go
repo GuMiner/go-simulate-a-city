@@ -1,7 +1,7 @@
 package geometry
 
 import (
-	"go-simulate-a-city/common/commonmath"
+	"common/commonmath"
 )
 
 // Defines an identifiable region

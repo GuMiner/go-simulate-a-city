@@ -2,7 +2,7 @@ package dto
 
 import (
 	"fmt"
-	"go-simulate-a-city/sim/config"
+	"sim/config"
 )
 
 // Defines a simple time DTO
